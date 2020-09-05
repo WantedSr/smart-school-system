@@ -1,0 +1,145 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  list-style: none;
+  text-decoration: none;;
+}
+body .el-table th.gutter{
+  display: table-cell!important;
+}
+.f_left{
+  float: left;
+}
+.f_right{
+  float: right;
+}
+.clearfix::after,.clearfix::before{
+  content: "";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  width: 0;
+  height: 0;;
+}
+
+.center{
+  text-align: center;
+}
+
+.por{
+  position: relative;
+}
+.poa{
+  position: absolute;
+}
+.pof{
+  position: fixed;
+}
+
+.block{
+  display: block;
+}
+.none{
+  display: none;
+}
+.inb{
+  display: inline-block;
+}
+.flex{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media screen and (min-width: 1920px){
+  .hidden-xl-only{
+    display: none;
+  }
+
+  .hidden-lg-and-up{
+    display: none;;
+  }
+  .hidden-md-and-up{
+    display: none;
+  }
+  .hidden-sm-and-up{
+    display: none;
+  }
+}
+@media screen and (min-width: 1200px) and (max-width: 1920px){
+  .hidden-lg-only{
+    display: none;;
+  }
+
+  .hidden-lg-and-up{
+    display: none;;
+  }
+  .hidden-md-and-up{
+    display: none;
+  }
+  .hidden-sm-and-up{
+    display: none;
+  }
+
+  .hidden-lg-and-down{
+    display: none;;
+  }
+}
+@media screen and (min-width: 992px) and (max-width: 1200px){
+  .hidden-md-only{
+    display: none;
+  }
+
+  .hidden-lg-and-down{
+    display: none;;
+  }
+  .hidden-md-and-down{
+    display: none;
+  }
+
+  .hidden-md-and-up{
+    display: none;
+  }
+  .hidden-sm-and-up{
+    display: none;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 992px){
+  .hidden-sm-only{
+    display: none;
+  }
+
+  .hidden-lg-and-down{
+    display: none;;
+  }
+  .hidden-md-and-down{
+    display: none;
+  }
+  .hidden-sm-and-down{
+    display: none;
+  }
+
+  .hidden-sm-and-up{
+    display: none;
+  }
+}
+
+@media screen and (max-width: 768px){
+  .hidden-xs-only{
+    display: none;
+  }
+  
+  .hidden-lg-and-down{
+    display: none;;
+  }
+  .hidden-md-and-down{
+    display: none;
+  }
+  .hidden-sm-and-down{
+    display: none;
+  }
+}
+
+
