@@ -12,6 +12,12 @@
         <el-form-item prop="reward_name" label="奖惩项目名称">
           <el-input style="width: 250px" v-model="sel_upa.reward_name" placeholder="奖惩项目名称"></el-input>
         </el-form-item>
+        <el-form-item prop="type" label="奖惩项目类型">
+          <el-select v-model="sel_upa.type" placeholder="选择类型">
+            <el-option label="奖励" value="good"></el-option>
+            <el-option label="惩罚" value="bad"></el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item prop="reward_score" label="奖惩项目分值">
           <el-input type="number" style="width: 250px" v-model="sel_upa.reward_score" placeholder="奖惩项目分值"></el-input>
         </el-form-item>
@@ -33,6 +39,7 @@ export default {
       sel_upa:{
         reward_id: "",
         reward_name: "",
+        type: "",
         reward_score: "",
         school: this.$store.state.userSchool,
         campus: this.$store.state.userCampus,
@@ -41,6 +48,9 @@ export default {
       rules:{
         reward_name: [
           { required: true, message: '请输入奖惩项目名称', trigger: 'blur' },
+        ],
+        type: [
+          { required: true, message: '请输入奖惩项目类型', trigger: 'change' },
         ],
         reward_id: [
           { required: true, message: '请选择奖惩项目代码', trigger: 'blur' }
@@ -91,11 +101,13 @@ export default {
               val: this.sel_upa.id,
             },
             success:(res)=>{
+              res = JSON.parse(res);
               if(res){
                 this.$message({
                   message: '恭喜你，修改奖惩项目成功',
                   type: 'success'
                 });
+                this.$router.go(-1);
               }
               else{
                 this.$message.error('修改失败，请稍后再试！');

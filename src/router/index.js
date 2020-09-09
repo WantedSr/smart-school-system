@@ -78,6 +78,13 @@ const TeacherToday = ()=>import("views/Teacher/Teacher_Today/main");
       const Commonly_Affairs_Register = ()=>import("views/Management/Features/Commonly/Affairs/Register/main");
       const Commonly_Affairs_SelAffair = ()=>import("views/Management/Features/Commonly/Affairs/SelAffair/main");
 
+  const Commonly_SecondInspection = ()=>import("views/Management/Features/Commonly/SecondInspection/main");
+      const Commonly_SecondInspection_Political = ()=>import("views/Management/Features/Commonly/SecondInspection/Political/main");
+      const Commonly_SecondInspection_Education = ()=>import("views/Management/Features/Commonly/SecondInspection/Education/main");
+      const Commonly_SecondInspection_Practice = ()=>import("views/Management/Features/Commonly/SecondInspection/Practice/main");
+      const Commonly_SecondInspection_Contest = ()=>import("views/Management/Features/Commonly/SecondInspection/Contest/main");
+
+
 
   const Teach_ClassSchedule = ()=>import("views/Management/Features/TeachSet/ClassSchedule/main");
   const Teach_TeacherSchedule = ()=>import("views/Management/Features/TeachSet/TeacherSchedule/main");
@@ -186,10 +193,15 @@ const TeacherToday = ()=>import("views/Teacher/Teacher_Today/main");
       const StuSet_StuInfo_Library = ()=>import("views/Management/Features/StuSet/StuInfo/StuLibrary/main");
       const StuSet_StuInfo_Reward = ()=>import("views/Management/Features/StuSet/StuInfo/StuReward/main");
       const StuSet_StuInfo_Status = ()=>import("views/Management/Features/StuSet/StuInfo/StuStatus/main");
-      
+
   const StuSet_Certificate = ()=>import("views/Management/Features/StuSet/Certificate/main");
       const StuSet_Certificate_StuCertificate = ()=>import("views/Management/Features/StuSet/Certificate/StuCertificate/main");
       const StuSet_Certificate_CertificateType = ()=>import("views/Management/Features/StuSet/Certificate/CertificateType/main");
+      
+  const StuSet_Rewards = ()=>import("views/Management/Features/StuSet/Rewards/main");
+      const StuSet_Rewards_List = ()=>import("views/Management/Features/StuSet/Rewards/List/main");
+      const StuSet_Rewards_Score = ()=>import("views/Management/Features/StuSet/Rewards/Score/main");
+
 
   const Base_Build = ()=>import("views/Management/Features/Base/Build/main");
   const Base_Class = ()=>import("views/Management/Features/Base/Class/main");
@@ -592,6 +604,40 @@ const routes = [
                 name: "Commonly_Affairs_SelAffair",
               },
             ]
+          },
+          {
+            path: "commonly/second_inspection",
+            name: "Second_inspection",
+            component: Commonly_SecondInspection,
+            meta:{
+              roles: '10008',
+            },
+            children: [
+              {
+                path: "/management/commonly/second_inspection",
+                redirect: "/management/commonly/second_inspection/political"
+              },
+              {
+                path: "political",
+                component: Commonly_SecondInspection_Political,
+                name: "Commonly_SecondInspection_Political"
+              },
+              {
+                path: "education",
+                component: Commonly_SecondInspection_Education,
+                name: "Commonly_SecondInspection_Education"
+              },
+              {
+                path: "practice",
+                component: "Commonly_SecondInspection_Practice",
+                name: "Commonly_SecondInspection_Practice"
+              },
+              {
+                path: "contest",
+                component: Commonly_SecondInspection_Contest,
+                name: "Commonly_SecondInspection_Contest"
+              },
+            ],
           },
 
 
@@ -1254,6 +1300,30 @@ const routes = [
             ]
           },
           {
+            path: "stuset/rewards",
+            name: "Rewards",
+            component: StuSet_Rewards,
+            meta: {
+              roles: "10077",
+            },
+            children:[
+              {
+                path: "/management/stuset/rewards",
+                redirect: "/management/stuset/rewards/list",
+              },
+              {
+                path: "list",
+                component: StuSet_Rewards_List,
+                name: "StuSet_Rewards_List",
+              },
+              {
+                path: "score",
+                component: StuSet_Rewards_Score,
+                name: "StuSet_Rewards_Score",
+              },
+            ]
+          },
+          {
             path: "stuset/certificate",
             name: "Certificate",
             component: StuSet_Certificate,
@@ -1568,17 +1638,17 @@ router.beforeEach((to,from,next)=>{
             let alone = store.state.userAuthority.filter((item)=>{
               return item.id == parent_roles;
             })
-            if(alone.length == 0){
-              alert("您没有权限访问!");
-              router.replace('/teacher');
-              console.log(1)
-            }
-            if(!alone[0].child.includes(roles)){
-              alert("您没有权限访问!");
-              router.replace('/teacher');
-              console.log(2)
-              console.log(alone[0])
-            }
+            // if(alone.length == 0){
+            //   alert("您没有权限访问!");
+            //   router.replace('/teacher');
+            //   console.log(1)
+            // }
+            // if(!alone[0].child.includes(roles)){
+            //   alert("您没有权限访问!");
+            //   router.replace('/teacher');
+            //   console.log(2)
+            //   console.log(alone[0])
+            // }
           }
 
         }

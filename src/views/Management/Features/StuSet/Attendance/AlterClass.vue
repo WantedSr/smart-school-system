@@ -27,7 +27,7 @@
           size="small"
           @change="getHealth"
           v-model="sel.time"
-          type="date"
+          type="date" 
           format="yyyy-MM-dd"
           value-format="timestamp"
           placeholder="选择日期">
@@ -370,6 +370,7 @@ export default {
       })
     },
     getHealth(){
+      // console.log(this.sel.type);
       this.loading = true;
       requestAjax({
         type:  "get",
