@@ -630,7 +630,7 @@ const routes = [
               },
               {
                 path: "practice",
-                component: "Commonly_SecondInspection_Practice",
+                component: Commonly_SecondInspection_Practice,
                 name: "Commonly_SecondInspection_Practice"
               },
               {

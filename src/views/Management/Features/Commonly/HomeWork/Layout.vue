@@ -57,7 +57,7 @@ export default {
         course: "",
         class: "",
         duration: "01:00",
-        end_date: new Date().setHours(0,0,0,0) + 86400000,
+        end_date: new Date().setHours(0,0,0,0),
         type: "",
         content: "",
         department: this.$store.state.userDepartment,

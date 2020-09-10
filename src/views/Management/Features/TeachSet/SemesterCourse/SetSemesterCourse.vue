@@ -53,6 +53,7 @@ export default {
           "semester": this.semester,
           "school": this.$store.state.userSchool,
           'campus': this.$store.state.userCampus, 
+          "department": this.$store.state.userDepartment,
           "skill": this.profession,
           'status': 0,
           "created_user": this.$store.state.userId,

@@ -119,7 +119,7 @@ export default {
           type: "sel_class_name",
           department: this.$store.state.userDepartment != '' && this.$store.state.userDepartment != '0' ? this.$store.state.userDepartment : null,
           selobj: {
-            'semester': this.sel.semester,
+            'semester': this.$store.state.semester,
             'department': this.sel.department,
             'status': "1",
           },

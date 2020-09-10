@@ -12,11 +12,7 @@
       </el-form-item>
       <el-form-item label="">
         <el-select @change="getCourse" size="small" v-model="sel.class" placeholder="查询班级">
-          <el-option 
-          v-for="(item,i) in classData" 
-          :key="'c-'+i" 
-          :label="item.class_name" 
-          :value="item.class"></el-option>
+          <el-option v-for="(item,i) in classData" :key="'class-'+i" :label="item.class_name" :value="item.class"></el-option>
         </el-select>
       </el-form-item>
       <el-form-item label="">
@@ -131,7 +127,7 @@ export default {
           type: "sel_class_name",
           department: this.sel.department,
           selobj: {
-            'semester': this.sel.semester,
+            'semester': this.$store.state.semester,
             'department': this.sel.department,
             'status': "1",
           },
@@ -141,6 +137,7 @@ export default {
           this.loading = false;
           res = JSON.parse(res);
           this.classData = res;
+          console.log(res);
         },
         error:(err)=>{
           this.loading = false;

@@ -2,7 +2,7 @@
   <div class="subpage">
     
     <div class="pagehead">
-      <h1>学生查询</h1>
+      <h1>教师查询</h1>
     </div>
 
     <el-form :inline="true" :model="sel" class="demo-form-inline">
@@ -92,7 +92,7 @@
       </div>
     </div>
 
-    <div class="see">
+    <!-- <div class="see">
       <el-dialog title="收货地址" :visible.sync="dialogTableVisible">
         <el-table :data="stuData">
           <el-table-column prop="student_name" label="姓名" min-width="100"></el-table-column>
@@ -103,7 +103,7 @@
           </el-table-column>
         </el-table>
       </el-dialog>
-    </div>
+    </div> -->
 
     <limit @setPage="setPage" :total="total" :sum="sum"></limit>
 
@@ -374,22 +374,23 @@ export default {
     },
     getCourse(){
       this.loading = true;
-      this.sel.course = '';
       requestAjax({
-        url: "/teach/ClassCourse.php",
+        url: "/teach/SemesterCourse.php",
         type: 'get',
         data:{
           type: "sel_more_course",
-          department: this.sel.department,
-          semester: this.sel.semester,
-          campus: this.$store.state.userCampus,
+          selobj:{
+            semester: this.$store.state.semester,
+            department: this.$store.state.userDepartment,
+            campus: this.$store.state.userCampus,
+          }
         },
         async: false,
         success:(res)=>{
           this.loading = false;
           res = JSON.parse(res);
           this.classCourse = res;
-          // console.log(res);
+          console.log(res);
         },
         error:(err)=>{
           this.loading = false;
