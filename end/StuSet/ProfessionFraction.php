@@ -71,19 +71,42 @@
         global $conn_stu;
         global $data;
         $request = $_POST['request'] ? (array)json_decode($_POST['request']) : null;
+        
+        try{
+            $date = $request['addTime'];
+            unset($request['addTime']);
+        } catch (Exception $e){};
+        
         if ($request){
             $data = $conn->select_more("*", $request);
         } else {
             $data = $conn->select_more();
         }
-        // if($_POST['student']){
-          for($i=0;$i<count($data);$i++){
-            $val = $data[$i];
-            $data[$i]['stu'] = _getStuByUid($val['student'])[0];
-            $data[$i]['class'] = _getClass($val['class'])[0];
-            $data[$i]['reward'] = _getReward($val['reward'])[0];
-          }
-        // }
+
+        if ($date){
+            $rule_data = date('Y-m-d', $date / 1000);
+            $date_filter_data = [];
+            foreach($data as $val){
+                $filter_field = date('Y-m-d', $val['addTime'] / 1000);
+                if ($rule_data == $filter_field){
+                    array_push($date_filter_data, $val);
+                }
+            }
+            $data = $date_filter_data;
+        };
+
+        foreach ($data as $val){
+            $data['semester'] = _getSemesterById($val['semester'])[0]['semester'];
+            $data['stu'] = _getStuByUid($val['student'])[0];
+            $data['class'] = _getClass($val['class'])[0];
+            $data['reward'] = _getReward($val['reward'])[0];
+        }
+    }
+    function _getSemesterById($semesterid){
+      $conn_semester = new Link('base_semester');
+      return $conn_semester->select_more("*", [
+          "semesterid"=>$semesterid
+      ]);
     }
 
     function _getStuByUid($userid){
