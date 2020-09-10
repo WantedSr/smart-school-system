@@ -1,5 +1,5 @@
 <template>
-  <div class="impCourse">
+  <div class="impCourse" v-loading="loading">
     <div class="pagehead">
       <h1>导入奖惩信息</h1>
     </div>
@@ -16,7 +16,7 @@
           :limit="1"
           :on-change="handle"
           :auto-upload="false">
-          <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+          <el-button slot="trigger" size="small" @click="clearFile" type="primary">选取文件</el-button>
           <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传</el-button>
           <el-button style="margin-left: 10px;" size="small" @click="down" type="warning">下载模板</el-button>
           <el-button size="small" @click="onBack">取消</el-button>
@@ -38,97 +38,35 @@ export default {
     return{
       form_imp:{},
 
+      loading: false,
+
       character:{
         userid: {
-          text: "学生学号",
+          text: "学号",
           type: "String",
         },
-        username: {
-          text: "学生名称",
-          type: "String",
-        },
-        sex: {
-          text: "学生性别",
-          type: "String",
-        },
-        nation: {
-          text: "民族",
-          type: "String",
-        },
-        user_ID:{
-          text: "身份证",
-          type: "String",
-        },
-        department:{
-          text: "所在部门",
-          type: "String",
-        },
-        skill:{
-          text: "所在专业",
-          type: "String",
-        },
-        grade:{
-          text: "年级",
+        student: {
+          text: "学生",
           type: "String",
         },
         class:{
-          text: "所在班级",
+          text: "班级",
           type: "String",
         },
-        phone_me:{
-          text: "手机号码",
+        department:{
+          text: "部门",
           type: "String",
         },
-        address_province:{
-          text: "居住省份",
+        type:{
+          text: "类型",
           type: "String",
         },
-        address_city:{
-          text: "居住城市",
+        reward:{
+          text: "奖惩项目",
           type: "String",
         },
-        address_area:{
-          text: "居住地区",
-          type: "String",
-        },
-        address_detailed:{
-          text: "详细居住地址",
-          type: "String",
-        },
-        house_register_provinces:{
-          text: "户籍所在省",
-          type: "String",
-        },
-        house_register_city:{
-          text: "户籍所在市",
-          type: "String",
-        },
-        house_register_area:{
-          text: "户籍所在区",
-          type: "String",
-        },
-        house_register_type:{
-          text: "户籍类型",
-          type: "String",
-        },
-        parent_name:{
-          text: "家长名称",
-          type: "String",
-        },
-        phone_parent:{
-          text: "家长电话",
-          type: "String",
-        },
-        phone_home:{
-          text: "家庭电话",
-          type: "String",
-        },
-        exam:{
-          text: "中考分数",
-          type: "String",
-        },
-        china_member:{
-          text: "是否团员",
+        addTime:{
+          text: "日期",
           type: "String",
         },
       },
@@ -139,6 +77,9 @@ export default {
   methods:{
     onBack(){
       this.$router.go(-1);
+    },
+    clearFile(){
+      this.excelData = [];
     },
     // 采集 EXCEL 的数据
     async handle(ev){
@@ -166,16 +107,6 @@ export default {
           type === 'number' ? (v = Number(v)) : null;
           obj[key] = v;
         }
-        obj['nature'] = "";
-        obj['school'] = this.$store.state.userSchool;
-        obj['campus'] = this.$store.state.userCampus;
-        obj['bornDate'] = "";
-        obj['job'] = "S1";
-        obj['type'] = "T1";
-        obj['evaluation'] = "";
-        obj['msgSet'] = "1,1";
-        obj['created_user'] = this.$store.state.userId;
-        obj['addTime'] = new Date().getTime();
         return obj;
       });
 
@@ -184,6 +115,7 @@ export default {
     },
     // 上传服务器
     submitUpload(){
+      this.loading = true;
       if(this.excelData.length == 0){
         this.$message({
           message: '请上传具有实际意义的文件！',
@@ -192,16 +124,19 @@ export default {
       }else{
         requestAjax({
           type: 'post',
-          url: "/StuManagement/StuInfo/StuLibrary.php",
+          url: "/StuSet/ProfessionFraction.php",
           data:{
-            type: 'imp_stu',
+            action: 'imp',
             arr: this.excelData,
+            semester: this.$store.state.semester,
+            campus: this.$store.state.userCampus,
+            created_user: this.$store.state.userId,
           },
           success:(res)=>{
             res = JSON.parse(res);
-            // console.log(res);
+            console.log(res);
             let arr = [];
-            $.each(res, (i, v)=>{ 
+            $.each(res.data, (i, v)=>{ 
               if(!v){
                 arr.push((i+1));
               }
@@ -234,9 +169,11 @@ export default {
               this.$store.commit("writeLog",arr);
 
             }
-            // this.$router.go(-1);
+            this.loading = false;
+            this.$router.go(-1);
           },
           error:(err)=>{
+            this.loading = false;
             console.log(err);
             this.$notify.error({
               title: '错误',

@@ -6,38 +6,6 @@
 
     <el-form :inline="true" :model="sel" class="demo-form-inline">
       <el-form-item label="">
-        <el-select @change="setValue" size="small" v-model="sel.where" placeholder="查询范围">
-          <el-option label="日" value="day"></el-option>
-          <el-option label="月" value="month"></el-option>
-          <el-option label="学期" value="semester"></el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item v-if="sel.where == 'semester'" label="">
-        <el-select @change="how" size="small" v-model="sel.semester" placeholder="查询学期">
-          <el-option v-for="(item,i) in semesterData" :key="'s-'+i" :label="item.semester" :value="item.semesterId"></el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="" v-if="sel.where == 'day'">
-        <el-date-picker
-          size="small"
-          v-model="sel.time"
-          type="date"
-          format="yyyy-MM-dd"
-          value-format="timestamp"
-          placeholder="选择日期">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="" v-if="sel.where == 'month'">
-        <el-date-picker
-          size="small"
-          v-model="sel.month"
-          format="yyyy-MM"
-          value-format="timestamp"
-          type="month"
-          placeholder="选择月份">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="">
         <el-select @change="getClass" size="small" v-model="sel.department" placeholder="选择部门">
           <el-option v-for="(item,i) in departmentData" :key="'1-'+i" :label="item.department_name" :value="item.department_id"></el-option>
         </el-select>
@@ -59,7 +27,7 @@
       </el-form-item>
     </el-form>
 
-    <div class="seldormroom">
+    <div class="table">
       <el-table
         :data="tableData"
         size="small"
@@ -78,18 +46,26 @@
           label="班级"
           min-width="100"
           sortable>
+          <template v-slot="scope">
+            {{ scope.row.class.class_name }}
+          </template>
         </el-table-column>
         <el-table-column
-          prop="username"
+          prop="student"
           label="姓名"
           min-width="100"
           sortable>
+          <template v-slot="scope">
+            {{ scope.row.stu.username }}
+          </template>
         </el-table-column>
         <el-table-column
-          prop="total_score"
-          label="总分"
+          label="分值"
           min-width="100"
           sortable>
+          <template v-slot="scope">
+            {{ totalScore(scope.row.total_score) }}
+          </template>
         </el-table-column>
         <el-table-column
           v-for="(item,i) in optionData"
@@ -97,19 +73,28 @@
           :label="item.reward_name"
           sortable 
           :prop="item.reward_id"
-          min-width="150"
-          >
-        </el-table-column>
-        <el-table-column
-          prop="addTime"
-          label="日期"
           min-width="100"
-          sortable>
+          >
+          <template v-slot="scope">
+            <p
+              :style="scope.row.total_score.filter(r=>r.reward == item.reward_id).length > 0 ? 
+                  scope.row.total_score.filter(r=>r.reward == item.reward_id)[0]['SUM(score)'] > 0 ? 'color: #2ecc71' 
+                  : scope.row.total_score.filter(r=>r.reward == item.reward_id)[0]['SUM(score)'] < 0 ? 'color : #e74c3c' 
+                  : '' : ''">
+              {{
+                scope.row.total_score.filter(r=>r.reward == item.reward_id).length > 0 ? 
+                  scope.row.total_score.filter(r=>r.reward == item.reward_id)[0]['SUM(score)'] : 
+                  0
+              }}
+            </p>
+          </template>
         </el-table-column>
 
       </el-table>
 
     </div>
+
+    <limit @setPage="setPage" :total="total" :sum="sum"></limit>
 
   </div>
 </template>
@@ -117,6 +102,7 @@
 <script>
 import * as sysTool from "assets/js/systemTool";
 import {requestAjax} from "network/request_ajax";
+import Limit from "../../../Limit/main";
 export default {
   data(){
     return{
@@ -124,12 +110,14 @@ export default {
         where: "day",
         time: new Date().setHours(0,0,0,0),
         month: "",
-        semester: "",
+        semester: this.$store.state.semester,
         department: this.$store.state.userDepartment,
         class: "",
         student: "",
       },
+
       tableData:[],
+      showTable: [],
 
       n: this.$route.query.n,
 
@@ -140,6 +128,9 @@ export default {
       optionData: [],
 
       loading: false,
+      
+      page: 1,
+      total: 50,
     }
   },
   created(){
@@ -150,52 +141,75 @@ export default {
     this.getClass();
   },
   methods:{
+    setPage(page){
+      this.page = page;
+      let start = ((this.page-1)*this.total);
+      let end;
+      if(start + this.total >= this.tableData.length){
+        end = this.tableData.length;
+      }else{
+        end = start + this.total;
+      }
+      this.showTable = [];
+      for(let i = start;i < end ; i++){
+        this.showTable.push(this.tableData[i]);
+      }
+    },
     onSubmit(){
+      if(this.sel.class == "" || this.sel.student == ""){
+        this.$message.error("选项不能为空！");
+        return false;
+      }
+      if(this.sel.where == 'month' && this.sel.month == ""){
+        this.$message.error("选项不能为空！");
+        return false;
+      } 
       let obj = {
-        type: "sel_more_attendance",
-        where: this.sel.where,
-        sel_type: this.sel.type,
-        semester: this.sel.where == "semester" ? this.sel.semester : this.$store.state.semester,
-        campus: this.$store.state.userCampus,
+        semester: this.where == 'semester' ? this.sel.semester : this.$store.state.semester,
         department: this.sel.department,
       }
 
-      if(this.sel.where == 'day'){
-        obj['time'] = this.sel.time;
-      }else if(this.sel.where == 'month'){
-        obj['month'] = this.sel.month;
-      }
-
-      if(this.sel.student != 'all'){
-        obj['student'] = this.sel.student;
-      }else if(this.sel.class != 'all'){
-        obj['class'] = this.sel.class;
-      }
-
       this.tableData = [];
-      // this.loading = true;
-      // requestAjax({
-      //   url: "/Dormitory/getOption.php",
-      //   type: "get",
-      //   data:obj,
-      //   success:(res)=>{
-      //     this.loading = false;
-      //     res = JSON.parse(res);
-      //     // console.log(res);
-      //     this.tableData = res;
-      //     this.tableData2 = [this.tableData[0]];
-      //   },
-      //   async: false,
-      //   error:(err)=>{
-      //     this.loading = false;
-      //     console.log(err);
-      //     this.$notify.error({
-      //       title: '错误',
-      //       message: '服务器有误！,请稍后再试！'
-      //     });
-      //   }
-      // })
+      this.loading = true;
+      requestAjax({
+        url: "/StuSet/ProfessionFraction.php",
+        type: "post",
+        data:{
+          action: "group",
+          semester: this.$store.state.semester,
+          department: this.sel.department,
+        },
+        success:(res)=>{
+          this.loading = false;
+          res = JSON.parse(res);
+          // console.log(res);
+          if(res.data.length > 0){
+            let data = res.data;
+            if(this.sel.student != 'all'){
+              data = data.filter(item=>item.student == this.sel.student);
+            }else if(this.sel.class != 'all'){
+              data = data.filter(item=>item.class.class_id == this.sel.class);
+            }else{
+              data = data;
+            }
 
+            // console.log(data);
+            // console.log(this.tableData);
+            this.tableData = data;
+            this.setPage(1);
+            // console.log(this.showTable);
+          }
+        },
+        async: false,
+        error:(err)=>{
+          this.loading = false;
+          console.log(err);
+          this.$notify.error({
+            title: '错误',
+            message: '服务器有误！,请稍后再试！'
+          });
+        }
+      })
     },
     getSemester(){
       this.loading = true;
@@ -355,10 +369,27 @@ export default {
         return y+"-"+m+"-"+d;
       }
     },
+    sum(){
+      return this.tableData.length
+    },
+    totalScore(){
+      return (arr)=>{
+        let sum = 0;
+        $.each(arr,(i, v)=>{ 
+          sum += parseInt(v['SUM(score)']);
+        });
+        return sum;
+      }
+    },
   },
+  components:{
+    Limit,
+  }
 }
 </script>
 
 <style>
-
+  .table{
+    margin-bottom: 12px;
+  }
 </style>

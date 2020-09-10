@@ -83,6 +83,7 @@ const TeacherToday = ()=>import("views/Teacher/Teacher_Today/main");
       const Commonly_SecondInspection_Education = ()=>import("views/Management/Features/Commonly/SecondInspection/Education/main");
       const Commonly_SecondInspection_Practice = ()=>import("views/Management/Features/Commonly/SecondInspection/Practice/main");
       const Commonly_SecondInspection_Contest = ()=>import("views/Management/Features/Commonly/SecondInspection/Contest/main");
+      const Commonly_SecondInspection_Record = ()=>import("views/Management/Features/Commonly/SecondInspection/Record/main");
 
 
 
@@ -636,6 +637,11 @@ const routes = [
                 path: "contest",
                 component: Commonly_SecondInspection_Contest,
                 name: "Commonly_SecondInspection_Contest"
+              },
+              {
+                path: "record",
+                component: Commonly_SecondInspection_Record,
+                name: "Commonly_SecondInspection_Record"
               },
             ],
           },

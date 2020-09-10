@@ -10,4 +10,6 @@
     echo ",";
   }
 
+  echo strtotime("2020-09-10");
+
 ?>

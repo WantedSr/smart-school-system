@@ -32,7 +32,7 @@
           size="small"
           v-model="sel.month"
           format="yyyy-MM"
-          value-format="timestamp"
+          value-format="yyyy-MM"
           type="month"
           placeholder="选择月份">
         </el-date-picker>
@@ -62,15 +62,19 @@
       </el-form-item>
     </el-form>
 
-    <div class="seldormroom">
+    <div class="table">
       <el-table
-        :data="tableData"
+        :data="showTable"
         size="small"
         v-loading="loading"
         border
         stripe
         ref="multipleTable"
         tooltip-effect="dark"
+        @selection-change="handleSelectionChange"
+        element-loading-text="拼命加载中"
+        element-loading-spinner="el-icon-loading"
+        element-loading-background="rgba(0, 0, 0, 0.8)"
         style="width: 100%">
         <el-table-column
           type="selection"
@@ -81,18 +85,27 @@
           label="班级"
           min-width="100"
           sortable>
+          <template v-slot="scope">
+            {{ scope.row.class.class_name }}
+          </template>
         </el-table-column>
         <el-table-column
-          prop="username"
+          prop="student"
           label="姓名"
           min-width="100"
           sortable>
+          <template v-slot="scope">
+            {{ scope.row.stu.username }}
+          </template>
         </el-table-column>
         <el-table-column
           prop="type"
           label="类型"
           min-width="100"
           sortable>
+          <template v-slot="scope">
+            <el-tag size="mini" :type="scope.row.type == 0 ? 'success' : 'danger'">{{ scope.row.type == 0 ? '加分' : "扣分" }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column
           prop="score"
@@ -101,36 +114,45 @@
           sortable>
         </el-table-column>
         <el-table-column
-          prop="description"
+          prop="reward"
           label="描述"
           min-width="100"
           sortable>
+          <template v-slot="scope">
+            {{ scope.row.reward.reward_name }}
+          </template>
         </el-table-column>
         <el-table-column
           prop="addTime"
           label="日期"
           min-width="100"
           sortable>
+          <template v-slot="scope">
+            {{ getDate(scope.row.addTime) }}
+          </template>
         </el-table-column>
         <el-table-column
           prop="do"
           label="操作"
           min-width="100"
           sortable>
-          <template>
-            <el-link type="primary">编辑</el-link>
+          <template v-slot="scope">
+            <el-link @click="onUpa(scope.row.id)" type="primary">编辑</el-link>
           </template>
         </el-table-column>
 
       </el-table>
 
     </div>
+    
+    <limit @setPage="setPage" :total="total" :sum="sum"></limit>
 
   </div>
 </template>
 
 <script>
 import * as sysTool from "assets/js/systemTool";
+import Limit from "../../../Limit/main";
 import {requestAjax} from "network/request_ajax";
 export default {
   data(){
@@ -139,12 +161,13 @@ export default {
         where: "day",
         time: new Date().setHours(0,0,0,0),
         month: "",
-        semester: "",
+        semester: this.$store.state.semester,
         department: this.$store.state.userDepartment,
         class: "",
         student: "",
       },
       tableData:[],
+      showTable: [],
 
       n: this.$route.query.n,
       multipleTable: [],
@@ -155,6 +178,9 @@ export default {
       semesterData: [],
 
       loading: false,
+      
+      page: 1,
+      total: 50,
     }
   },
   created(){
@@ -164,51 +190,92 @@ export default {
     this.getClass();
   },
   methods:{
+    setPage(page){
+      this.page = page;
+      let start = ((this.page-1)*this.total);
+      let end;
+      if(start + this.total >= this.tableData.length){
+        end = this.tableData.length;
+      }else{
+        end = start + this.total;
+      }
+      this.showTable = [];
+      for(let i = start;i < end ; i++){
+        this.showTable.push(this.tableData[i]);
+      }
+    },
     onSubmit(){
+      if(this.sel.class == "" || this.sel.student == ""){
+        this.$message.error("选项不能为空！");
+        return false;
+      }
+      if(this.sel.where == 'month' && this.sel.month == ""){
+        this.$message.error("选项不能为空！");
+        return false;
+      } 
       let obj = {
-        type: "sel_more_attendance",
-        where: this.sel.where,
-        sel_type: this.sel.type,
-        semester: this.sel.where == "semester" ? this.sel.semester : this.$store.state.semester,
-        campus: this.$store.state.userCampus,
+        semester: this.where == 'semester' ? this.sel.semester : this.$store.state.semester,
         department: this.sel.department,
       }
 
-      if(this.sel.where == 'day'){
-        obj['time'] = this.sel.time;
-      }else if(this.sel.where == 'month'){
-        obj['month'] = this.sel.month;
-      }
-
-      if(this.sel.student != 'all'){
-        obj['student'] = this.sel.student;
-      }else if(this.sel.class != 'all'){
-        obj['class'] = this.sel.class;
-      }
-
       this.tableData = [];
-      // this.loading = true;
-      // requestAjax({
-      //   url: "/Dormitory/getOption.php",
-      //   type: "get",
-      //   data:obj,
-      //   success:(res)=>{
-      //     this.loading = false;
-      //     res = JSON.parse(res);
-      //     // console.log(res);
-      //     this.tableData = res;
-      //     this.tableData2 = [this.tableData[0]];
-      //   },
-      //   async: false,
-      //   error:(err)=>{
-      //     this.loading = false;
-      //     console.log(err);
-      //     this.$notify.error({
-      //       title: '错误',
-      //       message: '服务器有误！,请稍后再试！'
-      //     });
-      //   }
-      // })
+      this.loading = true;
+      requestAjax({
+        url: "/StuSet/ProfessionFraction.php",
+        type: "post",
+        data:{
+          action: "get",
+          request: JSON.stringify(obj),
+        },
+        success:(res)=>{
+          this.loading = false;
+          res = JSON.parse(res);
+          if(res.data.length > 0){
+            let data = res.data;
+            if(this.sel.student != 'all'){
+              data = data.filter(item=>item.student == this.sel.student);
+            }else if(this.sel.class != 'all'){
+              data = data.filter(item=>item.class == this.sel.class);
+            }else{
+              data = data;
+            }
+
+            data = data.filter(item=>{
+              let addTime = item.addTime;
+              let nowDate = new Date()
+              nowDate.setTime(addTime);
+              let month = nowDate.getMonth() + 1;
+              let year = nowDate.getFullYear();
+              if(this.sel.where == 'day'){
+                return addTime >= this.sel.time && addTime <= (this.sel.time + 86400000);
+              }
+              else if(this.sel.where == 'month'){
+                let setDate = this.sel.month.split('-');
+                let setYear = parseInt(setDate[0]) , setMonth = parseInt(setDate[1]);
+                return month == setMonth && year == setYear
+              }
+              else if(this.sel.where == 'semester'){
+                return item.semester == this.sel.semester;
+              }
+            })
+
+            // console.log(data);
+            // console.log(this.tableData);
+            this.tableData = data;
+            this.setPage(1);
+            // console.log(this.showTable);
+          }
+        },
+        async: false,
+        error:(err)=>{
+          this.loading = false;
+          console.log(err);
+          this.$notify.error({
+            title: '错误',
+            message: '服务器有误！,请稍后再试！'
+          });
+        }
+      })
 
     },
     getSemester(){
@@ -365,21 +432,21 @@ export default {
         })
         .then(()=>{
           requestAjax({
-            url: "/StuSet/AttendanceOption.php",
+            url: "/StuSet/ProfessionFraction.php",
             type: 'post',
             data:{
-              type: "del_option",
-              arr: arr,
+              action: "del",
+              id: arr,
             },
             async: false,
             success:(res)=>{
-              if(res){
+              res = JSON.parse(res);
+              if(res.data){
                 this.$message({
                   message: '删除成功',
                   type: 'success'
                 });
-                let start = (this.page-1)*this.total;
-                this.getData("*",start,this.total);
+                this.onSubmit();
               }else{
                 this.$message.error('删除失败，请稍后再试！');
               }
@@ -399,6 +466,9 @@ export default {
       }else{
         this.$message.error('请选择选项后在进行操作！');
       }
+    },    
+    handleSelectionChange(val) {
+      this.multipleTable = val;
     },
     
   },
@@ -415,10 +485,18 @@ export default {
         return y+"-"+m+"-"+d;
       }
     },
+    sum(){
+      return this.tableData.length
+    },
   },
+  components:{
+    Limit,
+  }
 }
 </script>
 
 <style>
-
+  .table{
+    margin-bottom: 12px;
+  }
 </style>
