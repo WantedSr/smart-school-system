@@ -23,8 +23,8 @@
         // 测试
         $this->pdo = new PDO("mysql:host=".$this->test_host.";dbname=".$this->test_db,$this->test_user,$this->test_password);
         // 生产
-        // $this->pdo = new PDO("mysql:host=".$this->pdt_host.";port=".$this->pdt_port.";dbname=".$this->pdt_db,$this->pdt_user,$this->pdt_password);
-        $this->pdo->query("SET NAMES UTF8");
+        $this->pdo = new PDO("mysql:host=".$this->pdt_host.";port=".$this->pdt_port.";dbname=".$this->pdt_db,$this->pdt_user,$this->pdt_password);
+        // $this->pdo->query("SET NAMES UTF8");
       } catch (Exception $th) {
         $arr = ['连接数据库有误！',$th->getMessage()];
         echo json_encode($arr);

@@ -57,19 +57,16 @@
     }
 
     /**
-     * student string （通过student做筛选）: 2017217041 自选
-     * 默认返回所有更改
+     * student string （自定义筛选）: {"student": 2017217041} 自选
+     * 默认返回所有数据
      */
     function getData(){
         global $conn;
         global $conn_stu;
         global $data;
-        $student = $_POST['student'] ? $_POST['student'] : null;
-
-        if ($student){
-            $data = $conn->select_more("*",[
-                'student'=>$student
-            ]);
+        $request = $_POST['request'] ? (array)json_decode($_POST['request']) : null;
+        if ($request){
+            $data = $conn->select_more("*", $request);
         } else {
             $data = $conn->select_more();
         }
