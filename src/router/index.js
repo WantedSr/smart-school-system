@@ -82,9 +82,10 @@ const TeacherToday = ()=>import("views/Teacher/Teacher_Today/main");
       const Commonly_SecondInspection_Political = ()=>import("views/Management/Features/Commonly/SecondInspection/Political/main");
       const Commonly_SecondInspection_Education = ()=>import("views/Management/Features/Commonly/SecondInspection/Education/main");
       const Commonly_SecondInspection_Practice = ()=>import("views/Management/Features/Commonly/SecondInspection/Practice/main");
+      const Commonly_SecondInspection_PracticePlace = ()=>import("views/Management/Features/Commonly/SecondInspection/PracticePlace/main");
+      const Commonly_SecondInspection_Skill = ()=>import("views/Management/Features/Commonly/SecondInspection/Skill/main");
       const Commonly_SecondInspection_Contest = ()=>import("views/Management/Features/Commonly/SecondInspection/Contest/main");
       const Commonly_SecondInspection_Record = ()=>import("views/Management/Features/Commonly/SecondInspection/Record/main");
-
 
 
   const Teach_ClassSchedule = ()=>import("views/Management/Features/TeachSet/ClassSchedule/main");
@@ -632,6 +633,16 @@ const routes = [
                 path: "practice",
                 component: Commonly_SecondInspection_Practice,
                 name: "Commonly_SecondInspection_Practice"
+              },
+              {
+                path: "practice_place",
+                component: Commonly_SecondInspection_PracticePlace,
+                name: "Commonly_SecondInspection_PracticePlace"
+              },
+              {
+                path: "skill",
+                component: Commonly_SecondInspection_Skill,
+                name: "Commonly_SecondInspection_Skill"
               },
               {
                 path: "contest",
