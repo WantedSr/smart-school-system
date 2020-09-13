@@ -25,8 +25,8 @@
             <el-option label="违纪情况" value="discipline"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="备注">
-          <el-input style="width: 400px" v-model="sel_upa.remark" placeholder="备注"></el-input>
+        <el-form-item prop="score" label="分值">
+          <el-input style="width: 400px" type="number" v-model="sel_upa.score" placeholder="输入分值"></el-input>
         </el-form-item>
         <el-form-item label="">
           <el-button type="success" @click="onUpa('sel_upa')">修改</el-button>
@@ -44,7 +44,18 @@ import {requestAjax} from "network/request_ajax";
 export default {
   data(){
     return{
-      sel_upa:{},
+      sel_upa:{
+        option_id: "",
+        option_name: "",
+        model: "",
+        type: "",
+        score: "",
+        school: this.$store.state.userSchool,
+        campus: this.$store.state.userCampus,
+        state: '1',
+        status: '1',
+        created_user: this.$store.state.userId,
+      },
       rules:{
         option_name: [
           { required: true, message: '请输入选项名称', trigger: 'blur' },
@@ -57,6 +68,9 @@ export default {
         ],
         type: [
           { required: true, message: '请选择选项类型', trigger: 'change' }
+        ],
+        score: [
+          { required: true, message: '请输入对应分值', trigger: 'blur' }
         ],
       }
     }

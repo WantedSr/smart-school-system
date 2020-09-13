@@ -1,7 +1,7 @@
 <template>
   <div class="subpage" v-loading="loading">
     <div class="pagehead">
-      <h1>添加事务</h1>
+      <h1>修改事务信息</h1>
     </div>
     
     <div class="layout">
@@ -51,8 +51,8 @@
           <el-input type="textarea" v-model="form.content" :rows="4" maxlength="500" placeholder="输入事务详细信息，限500个字"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button size="small" type="primary" @click="onSubmit('form')">立即创建</el-button>
-          <el-button size="small" @click="onExit">取消</el-button>
+          <el-button size="small" type="primary" @click="onUpa('form')">修改</el-button>
+          <el-button size="small" @click="onBack">取消</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -117,10 +117,55 @@ export default {
     }
   },
   created(){
+    this.getData();
     this.getTeacher();
     this.getClass();
   },
   methods:{
+    getData(){
+      this.loading = true;
+      requestAjax({
+        url: "/Affairs/Affairs.php",
+        type: "post",
+        data:{
+          action: "get",
+          request: JSON.stringify({
+            campus: this.$store.state.userCampus,
+            id: this.$route.query.recordId,
+          }),
+          cu: 0,
+        },
+        async: true,
+        success:(res)=>{
+          this.loading = false;
+          res = JSON.parse(res);
+          console.log(res);
+          if(res.data.length > 0){
+            this.form = res.data[0];
+            if(this.form.type == 0){
+              this.tea = this.form.object;
+            }
+            else if(this.form.type == 1){
+              if(this.form.scope == 0){
+                this.cls = this.form.object;
+              }
+              else if(this.form.type == 1){
+                this.stu = this.form.object;
+              }
+            }
+          }
+        },
+        async: true,
+        error:(err)=>{
+          this.loading = false;
+          console.log(err);
+          this.$notify.error({
+            title: '错误',
+            message: '服务器有误！,请稍后再试！'
+          });
+        }
+      })
+    },
     selType(){
       this.form.scope = '';
     },
@@ -128,8 +173,8 @@ export default {
       this.cls = '';
       this.stu = '';
     },
-    onExit(){
-      location.href = '/management/backstage';
+    onBack(){
+      this.$router.go(-1);
     },
     getClass(){
       this.loading = true;
@@ -221,7 +266,7 @@ export default {
         }
       })
     },
-    onSubmit(formName){
+    onUpa(formName){
       this.$refs[formName].validate((valid) => {
         if (valid) {
           if(this.form.type == 0 && this.tea == ''){
@@ -271,22 +316,23 @@ export default {
             type: "post",
             url: "/Affairs/Affairs.php",
             data: {
-              action: "add",
-              arr: JSON.stringify(arr),
+              action: "up",
+              id: this.form.id,
+              request: JSON.stringify(this.form),
             },
             success:(res)=>{
               res = JSON.parse(res);
               console.log(res);
               if(res.data){
                 this.$message({
-                  message: '事务添加成功！',
+                  message: '事务修改成功!',
                   type: 'success'
                 });
               
                 // 日志写入
                 let obj = {
-                  content: "添加事务信息："+ this.form.title + " 日期：" + this.form.addDate,
-                  type: "添加记录",
+                  content: "修改事务信息："+ this.form.title + " 日期：" + this.form.addDate,
+                  type: "修改记录",
                   model: "事务模块",
                   ip: sessionStorage.getItem('ip'),
                   user: this.$store.state.userId,
@@ -297,11 +343,10 @@ export default {
                 let arr = Object.values(obj);
                 this.$store.commit("writeLog",arr);
 
-                // this.$router.go(-1);
-                location.reload();
+                this.$router.go(-1);
               }
               else{
-                this.$message.error('添加失败，请稍后再试！');
+                this.$message.error('修改失败，请稍后再试！');
               }
             },
             error:(err)=>{

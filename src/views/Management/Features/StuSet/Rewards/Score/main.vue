@@ -170,6 +170,7 @@ export default {
       }
 
       this.tableData = [];
+      this.showTable = [];
       this.loading = true;
       requestAjax({
         url: "/StuSet/ProfessionFraction.php",

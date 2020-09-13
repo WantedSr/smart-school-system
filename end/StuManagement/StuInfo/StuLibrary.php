@@ -154,8 +154,6 @@
       $res = selLimitStu($col,$start,$num,$dep,$skill,$grade,$class,$campus);
     }else if($type == 'sel_stu_name'){
       $col = $_GET['col'] ? $_GET['col'] : "*";
-      $start = $_GET['start'] ? $_GET['start'] : 0;
-      $num = $_GET['num'] ? $_GET['num'] : 15;
       $dep = $_GET['department'] ? $_GET['department'] : null;
       $skill = $_GET['skill'] ? $_GET['skill'] : null;
       $grade = $_GET['grade'] ? $_GET['grade'] : null;

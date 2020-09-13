@@ -1,8 +1,7 @@
 <template>
-  <div class="left_today box">
+  <div class="left_today box" v-loading="loading">
     <el-row>
       <el-col :lg="24" class="head">
-        <!-- <h4 class="por">今日待办<small class="poa"><el-link :underline="false">更多</el-link></small></h4> -->
         <h4 class="por">今日待办<small class="poa">TO-DO Today</small></h4>
       </el-col>
       <el-col class="mywork" :span="24">
@@ -53,10 +52,11 @@
 </template>
 
 <script>
+import {requestAjax} from "network/request_ajax";
 export default {
   data(){
     return {
-      
+      loading: false,
     }
   },
   props:{
@@ -68,7 +68,32 @@ export default {
   methods:{
     toLink(){
       this.$router.push("/student/message/xxxxx");
-    }
+    },
+    getToDo(){
+      this.loading = true;
+      requestAjax({
+        url: "/affairs.php",
+        type: "post",
+        data:{
+          action: 'today',
+          type: 'tea',
+          userid: this.$store.state.userId,
+        },
+        async: true,
+        success:res=>{
+          console.log(res);
+          this.loading = false;
+        },
+        error:err=>{
+          console.error(err);
+          this.loading = false;
+          this.$notify.error({
+            title: '服务器出错',
+            message: '请求数据出现错误，请稍后再试或联系管理员',
+          });
+        }
+      })
+    },
   }
 }
 </script>

@@ -25,8 +25,8 @@
             <el-option label="违纪情况" value="discipline"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="备注">
-          <el-input size="small" type="textarea" style="width: 400px" v-model="sel_add.remark" max="100" placeholder="备注,字数限制100字内"></el-input>
+        <el-form-item prop='score' label="分值">
+          <el-input size="small" type="number" style="width: 400px" v-model="sel_add.score" max="100" placeholder="输入分值"></el-input>
         </el-form-item>
         <el-form-item label="">
           <el-button size="small" type="success" @click="onAdd('sel_add')">添加</el-button>
@@ -49,7 +49,7 @@ export default {
         option_name: "",
         model: "",
         type: "",
-        remark: "",
+        score: "",
         school: this.$store.state.userSchool,
         campus: this.$store.state.userCampus,
         state: '1',
@@ -68,6 +68,9 @@ export default {
         ],
         type: [
           { required: true, message: '请选择选项类型', trigger: 'change' }
+        ],
+        score: [
+          { required: true, message: '请输入对应分值', trigger: 'blur' }
         ],
       },
       loading:false,

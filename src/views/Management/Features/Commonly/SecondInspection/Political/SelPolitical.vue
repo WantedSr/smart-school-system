@@ -285,6 +285,7 @@ export default {
     },
     onSubmit(){
       this.tableData = [];
+      this.showTable = [];
       this.loading = true;
       requestAjax({
         url: "/SecondInspection/Political.php",

@@ -138,6 +138,7 @@ export default {
       }
 
       this.tableData = [];
+      this.showTable = [];
       this.loading = true;
       requestAjax({
         url: "/SecondInspection/PracticePlace.php",

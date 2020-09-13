@@ -76,13 +76,10 @@
           </template>
         </el-table-column>
         <el-table-column
-          prop="remark"
-          label="备注"  
+          prop="score"
+          label="分值"  
           align="center"
           sortable>
-          <template v-slot="scope">
-            {{ scope.row.remark == '' || scope.row.remark == '无' ? "无" : scope.row.remark }}
-          </template>
         </el-table-column>
         <el-table-column
           prop="do"
