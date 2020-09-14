@@ -44,6 +44,7 @@
     /**
      * 返回宿舍、考勤、作业、奖惩所有数据，每一个都有sum作为计分
      * student string （学生uid）: 2017217041 必须
+     * fielt
      */
     function returnScoreALLEven(){
         global $data;
@@ -65,7 +66,7 @@
                 _CalculationDormitory($student), 
                 _CalculationSure($student),
                 _CalculationHomework($student),
-                _CalculationReward($stuset_reward)
+                _CalculationReward($stuset)
             ];
         }
     }
@@ -79,10 +80,22 @@
         return _CollectTScore($student, $conn_dom, $conn_dom_s);
     }
 
-    function _CollectTScore($student, $in_dbms, $dbms){
-        $res = $in_dbms->select_more('*', [
+    function _selectFilter($dbms, $student){
+        $field = [
             "student"=>$student
-        ]);
+        ];
+        if(array_key_exists('field', $_POST)){
+            $filter = (array)json_decode($_POST['field']);
+            foreach($filter as $key => $val){
+                $field[$key] = $val;
+            }
+        }
+        $data = $dbms->select_more('*', $field);
+        return $data;
+    }
+
+    function _CollectTScore($student, $in_dbms, $dbms){
+        $res = _selectFilter($in_dbms, $student);
         $data = _SumTScore($res, $dbms);
         return $data;
     }
@@ -114,9 +127,10 @@
                 array_push($list, $result);
             }
         } else if(is_string($id)){
-            $dbms->select_more("*", [
+            $result = $dbms->select_more("*", [
                 "option_id"=>$id
-            ]);
+            ])[0];
+            array_push($list, $result);
         }
 
         if ($list){
@@ -175,9 +189,7 @@
         // 2 缺交 -1
         // 3 补交 +1
         // 统一操作都是一分
-        $res = $conn_homework->select_more("*", [
-            "student"=>$student
-        ]);
+        $res = _selectFilter($conn_homework, $student);
         $sum = 0;
         foreach($res as $item){
             switch($item['state']){
@@ -194,9 +206,7 @@
         $conn_reward = new Link('stuset_reward');
         $conn_reward_s = new Link('student_reward_type');
 
-        $res = $conn_reward->select_more("*", [
-            "student"=>$student
-        ]);
+        $res = _selectFilter($conn_reward, $student);
         $ret = [];
         $sum = 0;
         for($i = 0; $i<count($res);$i++){
