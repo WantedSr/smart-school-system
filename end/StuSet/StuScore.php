@@ -95,7 +95,7 @@
                 _CalculationDormitory($student), 
                 _CalculationSure($student),
                 _CalculationHomework($student),
-                _CalculationReward($stuset)
+                _CalculationReward($student)
             ];
         }
     }
