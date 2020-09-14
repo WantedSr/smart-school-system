@@ -31,6 +31,7 @@
     /**
      * 返回宿舍、考勤、作业、奖惩所有数据的分数汇总
      * student string （学生uid）: 2017217041 必须
+     * field array （过滤字段）: {"semester":  192002} 不必须
      */
     function getSumScore(){
         global $data;
@@ -44,7 +45,7 @@
     /**
      * 返回宿舍、考勤、作业、奖惩所有数据，每一个都有sum作为计分
      * student string （学生uid）: 2017217041 必须
-     * fielt
+     * field array （过滤字段）: {"semester":  192002} 不必须
      */
     function returnScoreALLEven(){
         global $data;
@@ -80,6 +81,7 @@
         return _CollectTScore($student, $conn_dom, $conn_dom_s);
     }
 
+    // 过滤
     function _selectFilter($dbms, $student){
         $field = [
             "student"=>$student
