@@ -371,9 +371,16 @@ export default {
         async: true,
         success:(res)=>{
           res = JSON.parse(res);
-          // console.log(res);
+          console.log(res);
           this.form = res[0];
           this.form2 = res[1];
+          if(this.form2 == ""){
+            this.form2 = {
+              content: "尚未评价",
+              highlight: "尚未评价",
+              teacher: "尚未评价",
+            }
+          }
           this.dialogFormVisible = true;
         },   
         error:(err)=>{

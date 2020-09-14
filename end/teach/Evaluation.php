@@ -59,7 +59,7 @@
       $selobj = $_GET['selobj'] ? $_GET['selobj'] : null;
       $res = $conn->select_more($col,$selobj);
       $id = $res[0]['id'];
-      $res1 = $conn2->select($col,'evaluation',$id)[0];
+      $res1 = $conn2->select($col,'evaluation',$id);
 
       foreach($res as $key => $row){
         $organizer = $row['organizer'];
@@ -79,13 +79,18 @@
         $res[$key]['course'] = $conn->query("SELECT course_name FROM base_course WHERE course_id = '$course'")->fetchAll(PDO::FETCH_ASSOC)[0]['course_name'];
         $res[$key]['created_user'] = $conn->query("SELECT user_name FROM tb_login WHERE user_id = '$user'")->fetchAll(PDO::FETCH_ASSOC)[0]['user_name'];
       }
-      $teacher = json_decode($res1['teacher']);
-      $arr = [];
-      foreach($teacher as $row){
-        $teaName = $conn->query("SELECT user_name FROM tb_login WHERE user_id = '$row'")->fetchAll(PDO::FETCH_ASSOC)[0]['user_name'];
-        array_push($arr,$teaName);
+      if(count($res1) > 0){
+        $res1 = $res1[0];
+        $teacher = json_decode($res1['teacher']);
+        $arr = [];
+        foreach($teacher as $row){
+          $teaName = $conn->query("SELECT user_name FROM tb_login WHERE user_id = '$row'")->fetchAll(PDO::FETCH_ASSOC)[0]['user_name'];
+          array_push($arr,$teaName);
+        }
+        $res1['teacher'] = join($arr,'-');
+      }else{
+        $res1 = "";
       }
-      $res1['teacher'] = join($arr,'-');
 
       $res = [$res[0],$res1];
       // $res = $id;
