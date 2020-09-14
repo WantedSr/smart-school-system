@@ -16,6 +16,7 @@ export default new Vuex.Store({
     userCampus: "",
     userDepartment: "",
     userAuthority: "",
+    userClass: "",
 
     semester: "",
     semester_start: "",
@@ -70,8 +71,9 @@ export default new Vuex.Store({
               state.semester_start = res['info']['semester_start'];
               state.school_name = res['info']['school_name'];
               state.campus_name = res['info']['campus_name'];
-              state.userAuthority = JSON.parse(res['info']['authority']);
-
+              state.userAuthority = JSON.parse(res['info']['authority'] ? res['info']['authority'] : null);
+              state.userClass = res['info']['class'];
+              // console.log(res['info']);
               let $old = state.semester_start;
               let $new = new Date().getTime();
               let $zhou = parseInt(($new-$old)/1000/60/60/24/7 + 1);

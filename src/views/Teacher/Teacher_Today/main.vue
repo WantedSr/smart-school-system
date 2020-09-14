@@ -2,10 +2,10 @@
   <div class="today">
     <el-row :gutter="40">
       <el-col :lg="12">
-        <tea-today></tea-today>
+        <tea-today @getDayToDo="getDayToDo"></tea-today>
       </el-col>
       <el-col class="" :lg="12">
-        <tea-today-work></tea-today-work>
+        <tea-today-work :todoData="todoData" :loading="loading"></tea-today-work>
       </el-col>
     </el-row>
   </div>
@@ -18,7 +18,9 @@ import TeaTodayWork from './TeaTodayWork';
 export default {
   data(){
     return{
-      userData: "",
+      todoData: [],
+
+      loading: false,
     }
   },
   computed:{
@@ -30,6 +32,52 @@ export default {
     }
   },
   methods:{
+    getDayToDo(day){
+      // console.log(day);
+      let date = new Date();
+      let arr = day.split("-");
+      date.setFullYear(parseInt(arr[0]));
+      date.setMonth(parseInt(arr[1])-1);
+      date.setDate(parseInt(arr[2]));
+      this.todoData = [];
+      this.loading = true;
+      requestAjax({
+        url: "/affairs.php",
+        type: "post",
+        data:{
+          action: 'day',
+          type: 'tea',
+          userid: this.$store.state.userId,
+          campus: this.$store.state.userCampus,
+          date: date.setHours(0,0,0,0),
+        },
+        async: true,
+        success:res=>{
+          res = JSON.parse(res);
+          if(res.data.length > 0){
+            let data = res.data;
+            if(data.length <= 3){
+              this.todoData = res.data;
+            }else{
+              data.sort((a,b)=>parseInt(a.addTime) - parseInt(b.addTime));
+              for(let i=0;i<3;i++){
+                this.todoData.push(data[i]);
+              }
+            }
+          }
+          // console.log(this.todoData);
+          this.loading = false;
+        },
+        error:err=>{
+          console.error(err);
+          this.loading = false;
+          this.$notify.error({
+            title: '服务器出错',
+            message: '请求数据出现错误，请稍后再试或联系管理员',
+          });
+        }
+      })
+    }
   },
   created(){
     let token = localStorage.getItem("Authorization");

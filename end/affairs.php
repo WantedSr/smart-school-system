@@ -3,7 +3,7 @@
     header('Access-Control-Allow-Origin: *');
 
     try{
-        require_once("../conn.php");
+        require_once("./conn.php");
         $conn_user = new Link('tb_login');
         $conn = new Link('commonly_affairs');
     } catch (PDOException $e){
@@ -16,15 +16,15 @@
     $data = [];
 
     try{
+      /**
+       * type 获取人是学生还是老师 必须
+       * action 操作类型 必须
+       */
       $type = $_POST['type'] ? $_POST['type'] : null;
       $action = $_POST['action'] ? $_POST['action'] : null;
       switch ($action){
-        case 'today': getToday(); break;
-        case 'get': getData(); break;
-        case 'getId': _getId(); break;
-        case 'del': delData(); break;
-        case 'up': upData(); break;
-        case 'group': groupData(); break;
+        case 'day': getDayToDo(); break;
+        case 'month': getMonth(); break;
       }
     } catch (PDOException $e) {
       echo json_encode([
@@ -40,85 +40,137 @@
     ]);
 
     /**
-     * 返回查询用户
-     */
-    function _getUser($id,$cam){
-      global $conn_user;
-      return $conn_user->select_more("user_name",[
-        "user_id"=>$id,
-        "user_campus"=>$cam,
-      ])[0];
-    }
-
-
-    /**
-     * id int （stuset_reward 的唯一自增值）: 1 必须
-     * request object （需要更新的数据）: {"p": "捡到一分钱"} 必须
-     */
-    function upData(){
-        global $conn;
-        global $data;
-        $id = $_POST['id'] ? $_POST['id'] : null;
-        $request = $_POST['request'] ? (array)json_decode($_POST['request']) : null;
-        $data = $conn->update($request, 'id', $id);
-    }
-    
-    /**
-     * id array 存放要删除的记录的id 必须
-     */
-    function delData(){
-        global $conn;
-        global $data;
-        $id = $_POST['id'] ? $_POST['id'] : null;
-        $data = $conn->delete_more('id', $id);
-    }
-
-    /**
      * col string 查询列 默认全部 自选
-     * request 数组对象 （筛选查询）: {"student": 2017217041} 自选
+     * campus string 所在校区 必填
+     * userid string 用户id 必填
+     * start string 某月开始的时间戳 必填
+     * end string 某月结束的时间戳 必填
+     * cls string 用户所在班级 类型为 stu 时必填
+     * dep string 用户所在部门 类型为 stu 时必填
      * 默认返回所有数据
      */
-    function getData(){
-        global $conn;
-        global $data;
-        $col = $_POST['col'] ? $_POST['col'] : "*";
-        $request = $_POST['request'] ? (array)json_decode($_POST['request'],true) : null;
-        
-        try{
-            $date = $request['addTime'];
-            unset($request['addTime']);
-        } catch (Exception $e){};
-        
-        if ($request){
-            $data = $conn->select_more($col, $request);
-        } else {
-            $data = $conn->select_more($col);
+    function getMonth(){
+      global $conn;
+      global $data;
+      global $type;
+
+      $campus = $_POST['campus'] ? $_POST['campus'] : null;
+      $userid = $_POST['userid'] ? $_POST['userid'] : null;
+      $start = $_POST['start'] ? $_POST['start'] : null;
+      $end = $_POST['end'] ? $_POST['end'] : null;
+      $col = $_POST['col'] ? $_POST['col'] : "*";
+      if($type == 'tea'){
+        $sql = "SELECT addDate FROM commonly_affairs 
+        WHERE type = '0' 
+          AND campus = '".$campus."'
+          AND object = '".$userid."' 
+          AND addDate >= '".$start."' 
+          AND addDate <= '".$end."' 
+        GROUP BY addDate 
+        ORDER BY addDate";
+        $res = $conn->query($sql)->fetchAll(PDO::FETCH_ASSOC); 
+        foreach($res as $key => $val){
+          $date = $val['addDate'];
+          $sql2 = "SELECT $col FROM commonly_affairs 
+          WHERE type = '0' 
+            AND campus = '$campus' 
+            AND object = '$userid' 
+            AND addDate = '$date'";
+          $res2 = $conn->query($sql2)->fetchAll(PDO::FETCH_ASSOC);
+          $res[$key]['addDate'] = date('Y-m-d',substr($val['addDate'],0,10));
+          $res[$key]['child'] = $res2;
         }
-        
-        if($_POST['cu'] == 1){
-          foreach($data as $key => $val){
-            $data[$key]['created_user'] = _getUser($val['created_user'],$val['campus'])['user_name'];
-          }
+      }
+      else if($type == 'stu'){
+        $cls = $_POST['cls'] ? $_POST['cls'] : null;
+        $dep = $_POST['dep'] ? $_POST['dep'] : null;
+        $sql = "SELECT addDate FROM commonly_affairs 
+        WHERE 
+          (
+            (scope = '0' AND (object = 'all' OR object = '$cls'))
+            OR
+            (scope = '1' AND object = '$userid')
+          )
+          AND type = '1' 
+          AND addDate >= $start 
+          AND addDate <= $end 
+          AND department = '$dep' 
+          AND campus = '$campus'
+        GROUP BY addDate 
+        ORDER BY addDate";
+
+        $res = $conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach($res as $key => $val){
+          $date = $val['addDate'];
+          $sql2 = "SELECT $col FROM commonly_affairs 
+          WHERE 
+            (
+              (scope = '0' AND (object = 'all' OR object = '$cls'))
+              OR
+              (scope = '1' AND object = '$userid')
+            )
+            AND type = '1' 
+            AND addDate >= '$date' 
+            AND department = '$dep' 
+            AND campus = '$campus'";
+          $res2 = $conn->query($sql2)->fetchAll(PDO::FETCH_ASSOC);
+          $res[$key]['addDate'] = date('Y-m-d',substr($val['addDate'],0,10));
+          $res[$key]['child'] = $res2;
         }
+      }
+      $data = $res;
     }
 
     /**
-     * student string （通过student做筛选）: 2017217041 必须
-     * type int （加分减分 0 1）: 0 必须
-     * reward string （说明）: 捡到一分钱 必须
-     * score int （加减多少分）: -1 必须
-     * create_user string（增加记录的用户ID）: 2017217041 必须
+     * userid string （通过用户id做筛选）: 2017217041 必须
+     * campus string 所在校区: 0 必须
+     * date string 获取哪一日的时间戳 必须
+     * col string 获取的列，默认所有 必须
+     * cls string 学生的班级 必须
+     * dep string 学生的部门 必须
      */
-    function getToday(){
+    function getDayToDo(){
         global $conn;
         global $data;
         global $type;
-
-        $beginToday=mktime(0,0,0,date('m'),date('d'),date('Y'));
+      
+        $campus = $_POST['campus'] ? $_POST['campus'] : null;
+        $userid = $_POST['userid'] ? $_POST['userid'] : null;
+        $date = $_POST['date'] ? $_POST['date'] : null;
+        $col = $_POST['col'] ? $_POST['col'] : "*";
         if($type == 'tea'){
-          
+          $obj = [
+            'type'=>'0',
+            'addDate'=>$date,
+            'object'=>$userid,
+            'campus'=>$campus,
+          ];
+          $data = $conn->select_more($col,$obj);
         }
-        // $data = $arr;
+        else if($type == 'stu'){
+          $cls = $_POST['cls'] ? $_POST['cls'] : null;
+          $dep = $_POST['dep'] ? $_POST['dep'] : null;
+          $sql = "SELECT $col FROM commonly_affairs 
+          WHERE 
+            (
+              (scope = '0' AND (object = 'all' OR object = :cls))
+              OR
+              (scope = '1' AND object = :userid)
+            )
+            AND type = '1' 
+            AND department = :dep 
+            AND addDate = :addDate
+            AND campus = :campus";
+          $res = $conn->prepare($sql);
+          $res->bindParam(":cls",$cls);
+          $res->bindParam(":userid",$userid);
+          $res->bindParam(":dep",$dep);
+          $res->bindParam(":addDate",$date);
+          $res->bindParam(":campus",$campus);
+          $res->execute();
+          $data = $res->fetchAll(PDO::FETCH_ASSOC);
+        }
     }
 
 

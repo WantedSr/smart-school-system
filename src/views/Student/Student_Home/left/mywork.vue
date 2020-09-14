@@ -8,7 +8,7 @@
         <el-row>
           <el-col :span="8">
             <el-link :underline="false" type="success" @click="toToday">
-              <h1>{{work}}</h1>
+              <h1>{{todoNum}}</h1>
               <p>今日待办</p>
             </el-link>
           </el-col>
@@ -45,7 +45,7 @@ export default {
       type: Number,
       default: 0,
     },
-    work:{
+    todoNum:{
       type: Number,
       default: 3,
     },

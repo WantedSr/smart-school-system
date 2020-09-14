@@ -1,23 +1,22 @@
 <template>
-  <div class="box todayList">
+  <div class="box todayList" v-loading="loading">
     <div>
       <el-calendar
       v-model="date">
         <!-- 这里使用的是 2.5 slot 语法，对于新项目请使用 2.6 slot 语法-->
         <template
           slot="dateCell"
-          slot-scope="{date, data}">
+          slot-scope="{data}">
           <div :class="data.isSelected ? 'is-selected' : ''" @click="getDate(data.day)">
             <!-- {{ data.day.split('-').slice(1).join('-') }} {{ data.isSelected ? '✔️' : ''}} -->
             {{ data.day.split('-').slice(1).join('-') }}
             <!-- {{data.day.split('-')[2]}} -->
             <br>
-            <div v-if="workData[data.day.split('-').slice(1).join('-')] != ''">
+            <div v-if="workData.filter(item=>item.addDate == data.day).length > 0">
               <ul>
-                <!-- <li class="success">早上三四节数学考试</li>
-                <li class="warning">中午午休上传成绩</li>
-                <li class="danger">下午第七节学生会开会</li> -->
-                <li v-for="(item,i) in workData[data.day.split('-').slice(1).join('-')]" :key="i" :class="item.type"><el-link :title="item.title" :underline="false" :type="item.type">{{item.title}}</el-link></li>
+                <li v-for="(item,i) in workData.filter(item=>item.addDate == data.day)[0]['child']" :key="day+'-'+i" :class="item.type">
+                  <el-link :title="item.title" :underline="false" :type=" getState(item.start_time,item.end_time) == 0 ? 'primary' : getState(item.start_time,item.end_time) == 1 ? 'success' : 'danger' ">{{item.title}}</el-link>
+                </li>
               </ul>
             </div>
               <!-- {
@@ -33,36 +32,111 @@
 </template>
 
 <script>
+import {requestAjax} from "network/request_ajax";
 export default {
   data(){
     return{
       date: new Date(),
-      workData: {
-        "04-22":[
-          {
-            title: "早上三四节数学考试",
-            type: "success",
-          },
-          {
-            title: "中午午休上传成绩",
-            type: "warning",
-          },
-          {
-            title: "下午第七节学生会开会",
-            type: "danger",
-          },
-        ]
-      },
+      workData: [],
+      loading: false,
+
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
+      day: new Date().getDate(),
     }
+  },
+  created(){
+    this.getToDo();
+    let date = this.year + '-' + this.month + "-" + this.day;
+    this.$emit("getDayToDo",date);
   },
   methods:{
     goBack(){
       this.$router.go(-1);
     },
-    getDate(day){
-      console.log(day);
+    getDate(date){
+      // console.log(day);
+      let arr = date.split('-');
+      if(this.day != parseInt(arr[2])){
+        this.day = parseInt(arr[2]);
+      }
+      if(this.year != parseInt(arr[0]) || this.month != parseInt(arr[1])){
+        this.year = parseInt(arr[0]);
+        this.month = parseInt(arr[1]);
+        this.getToDo();
+      }
+      this.$emit("getDayToDo",date);
+    },
+    getToDo(){
+      let start = new Date(this.year,this.month-1,1).getTime();
+      let end = new Date(this.year,this.month,0).getTime();
+      // console.log(start);
+      // console.log(end);
+      this.loading = true;
+      requestAjax({
+        type: "post",
+        url: "/affairs.php",
+        data:{
+          action: 'month',
+          type: "tea",
+          userid: this.$store.state.userId,
+          campus: this.$store.state.userCampus,
+          start: start,
+          end: end,
+        },
+        success:res=>{
+          this.loading = false;
+          res = JSON.parse(res);
+          this.workData = res.data;
+          // console.log(res.data);
+        },
+        error:err=>{
+          this.loading = false;
+          console.error(err);
+        }
+      })
     }
-  }
+  },
+  computed:{
+    
+    getState(){
+      return (s,e)=>{
+        let date = new Date();
+        let start = s.split(':');
+        let end = e.split(':');
+        let starthour = parseInt(start[0]),startmin = parseInt(start[1]);
+        let endhour = parseInt(end[0]),endmin = parseInt(end[1]);
+        let nowhour = date.getHours(),nowmin = date.getMinutes();
+        if(starthour > nowhour){
+          return 0
+        }
+        else if(starthour == nowhour){
+          if(startmin > nowmin){
+            return 0;
+          }else{
+            if(endhour == nowhour && endmin > nowmin){
+              return 1;
+            }
+            return 2;
+          }
+        }
+        else if(endhour > nowhour){
+          return 1;
+        }
+        else{
+          if(endhour == nowhour){
+            if(endmin > nowmin){
+              return 1;
+            }
+            return 2
+          }
+          else{
+            return 2;
+          }
+        }
+      }
+    },
+  },
 }
 </script>
 

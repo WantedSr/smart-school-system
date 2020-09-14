@@ -195,6 +195,7 @@ const TeacherToday = ()=>import("views/Teacher/Teacher_Today/main");
       const StuSet_StuInfo_Library = ()=>import("views/Management/Features/StuSet/StuInfo/StuLibrary/main");
       const StuSet_StuInfo_Reward = ()=>import("views/Management/Features/StuSet/StuInfo/StuReward/main");
       const StuSet_StuInfo_Status = ()=>import("views/Management/Features/StuSet/StuInfo/StuStatus/main");
+      const StuSet_StuInfo_Score = ()=>import("views/Management/Features/StuSet/StuInfo/StuScore/main");
 
   const StuSet_Certificate = ()=>import("views/Management/Features/StuSet/Certificate/main");
       const StuSet_Certificate_StuCertificate = ()=>import("views/Management/Features/StuSet/Certificate/StuCertificate/main");
@@ -1191,6 +1192,11 @@ const routes = [
                 path: "stu_status",
                 name: "StuStatus",
                 component: StuSet_StuInfo_Status,
+              },
+              {
+                path: "stu_score",
+                name: "StuScore",
+                component: StuSet_StuInfo_Score,
               },
             ]
           },

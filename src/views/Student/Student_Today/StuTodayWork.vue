@@ -2,12 +2,13 @@
   <div class="todayWork box">
     <el-page-header @back="goBack" content="我的事务"></el-page-header>
     <div class="head">
-      <h4 class="por">04月22日 事务 <small class="poa">ToDoDay</small></h4>
+      <h4 class="por">当日事务 <small class="poa">ToDoDay</small></h4>
     </div>
     <div>
       <el-table
-        :data="tableData"
+        :data="todoData"
         style="width: 100%"
+        size="mini"
         >
         <el-table-column
           prop="title"
@@ -18,24 +19,27 @@
         <el-table-column
           prop="date"
           label="时间"
+          min-width="100"
           sortable>
-        </el-table-column>
-        <el-table-column
-          prop="session"
-          label="节次">
+          <template v-slot="scope">
+            {{ getTime(scope.row.start_time) }}
+          </template>
         </el-table-column>
         <el-table-column
           prop="state"
+          sortable
+          min-width="100"
           label="状态">
           <template v-slot="scope">
-            <el-tag :type="gettype(scope.row.state)" size="small">{{scope.row.state}}</el-tag>
+            <el-tag :type=" getState(scope.row.start_time,scope.row.end_time) == 0 ? 'primary' : getState(scope.row.start_time,scope.row.end_time) == 1 ? 'success' : 'danger' " size="small">{{  getState(scope.row.start_time,scope.row.end_time) == 0 ? '待完成' : getState(scope.row.start_time,scope.row.end_time) == 1 ? '完成中' : '已超时'  }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column
           prop="dp"
+          min-width="90"
           label="查看">
-          <template>
-            <el-link :underline="false" @click="seeToDo">查看</el-link>
+          <template v-slot="scope">
+            <el-link :underline="false" @click="seeToDo(scope)">查看</el-link>
           </template>
         </el-table-column>
       </el-table>
@@ -43,57 +47,25 @@
     <el-dialog
       title="事务详情"
       :visible.sync="dialogFormVisible"
-      width="30%"
-      :before-close="handleClose">
+      width="50%">
       <el-form ref="form" :model="form" label-width="80px">
         <el-form-item label="事务名称">
-          <el-input disabled v-model="form.title"></el-input>
+          {{ form.title }}
         </el-form-item>
         <el-form-item label="事务时间">
-          <el-select disabled v-model="form.date" placeholder="请选择事务使劲啊">
-            <el-option label="上午" value="上午"></el-option>
-            <el-option label="中午" value="中午"></el-option>
-            <el-option label="下午" value="下午"></el-option>
-            <el-option label="晚修" value="晚修"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="事务节次">
-          <el-select disabled v-model="form.session" placeholder="请选择事务使劲啊">
-            <el-option label="第一节" value="第一节"></el-option>
-            <el-option label="第二节" value="第二节"></el-option>
-            <el-option label="第三节" value="第三节"></el-option>
-            <el-option label="第四节" value="第四节"></el-option>
-            <el-option label="第五节" value="第五节"></el-option>
-            <el-option label="第六节" value="第六节"></el-option>
-            <el-option label="第七节" value="第七节"></el-option>
-            <el-option label="晚修第一节" value="晚修第二节"></el-option>
-            <el-option label="晚修第二节" value="晚修第一节"></el-option>
-          </el-select>
+          {{ getTime(form.start_time) }}
         </el-form-item>
         <el-form-item label="结束时间">
-          <el-time-picker
-            disabled
-            is-range
-            v-model="form.end"
-            range-separator="-"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-            placeholder="选择时间范围">
-          </el-time-picker>
+          {{ form.start_time }}
+        </el-form-item>
+        <el-form-item label="结束时间">
+          {{ form.end_time }}
         </el-form-item>
         <el-form-item label="当前状态">
-          <el-radio-group disabled v-model="form.state">
-            <el-radio :label="1">已完成</el-radio>
-            <el-radio :label="2">待完成</el-radio>
-            <el-radio :label="3">已超时</el-radio>
-          </el-radio-group>
+          <el-tag :type=" getState(form.start_time,form.end_time) == 0 ? 'primary' : getState(form.start_time,form.end_time) == 1 ? 'success' : 'danger' " size="small">{{  getState(form.start_time,form.end_time) == 0 ? '待完成' : getState(form.start_time,form.end_time) == 1 ? '完成中' : '已超时'  }}</el-tag>
         </el-form-item>
         <el-form-item label="事务详情">
-          <el-input disabled type="textarea" v-model="form.message"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="onSubmit">立即创建</el-button>
-          <el-button @click="onSubmit">取消</el-button>
+          {{ form.content }}
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -104,67 +76,91 @@
 export default {
   data(){
     return{
-      tableData: [
-        {
-          title: "早上三四节数学考试",
-          date: "上午",
-          session: "第三节",
-          state: "已完成",
-        },
-        {
-          title: "中午午休上传成绩",
-          date: "中午",
-          session: "午休",
-          state: "待完成",
-        },
-        {
-          title: "下午第七节学生会开会",
-          date: "下午",
-          session: "第七节",
-          state: "已超时",
-        },
-      ],
+      tableData: [],
+
       dialogFormVisible: false,
-      form:{
-        title: "早上三四节数学考试",
-        date: "上午",
-        session: "第三节",
-        state: "1",
-        end: [new Date(2016, 9, 10, 8, 40), new Date(2016, 9, 10, 9, 40)],
-        message: "请各位同学与4月22号上午第三节准时到教师进行数学考试！",
-      },
+
+      form:{},
+    }
+  },
+  props:{
+    todoData:{
+      type: Array,
+      required: true,
+      default: [],
+    },
+    loading:{
+      type: Boolean,
+      required: false,
+      default: false,
     }
   },
   computed:{
-    gettype(){
-      return function(type){
-        if(type == '已完成'){
-          return "success";
-        }else if(type == "待完成"){
-          return "primary";
-        }else if(type == '已超时'){
-          return 'danger';
+    getState(){
+      return (s,e)=>{
+        if(!s || !e) return null;
+        let date = new Date();
+        let start = s.split(':');
+        let end = e.split(':');
+        let starthour = parseInt(start[0]),startmin = parseInt(start[1]);
+        let endhour = parseInt(end[0]),endmin = parseInt(end[1]);
+        let nowhour = date.getHours(),nowmin = date.getMinutes();
+        if(starthour > nowhour){
+          return 0
+        }
+        else if(starthour == nowhour){
+          if(startmin > nowmin){
+            return 0;
+          }else{
+            if(endhour == nowhour && endmin > nowmin){
+              return 1;
+            }
+            return 2;
+          }
+        }
+        else if(endhour > nowhour){
+          return 1;
+        }
+        else{
+          if(endhour == nowhour){
+            if(endmin > nowmin){
+              return 1;
+            }
+            return 2
+          }
+          else{
+            return 2;
+          }
         }
       }
-    }
+    },
+    getTime(){
+      return (s)=>{
+        if(s == undefined) return null;
+        let hour = parseInt(s.split(":")[0]);
+        if(hour >= 4 && hour < 12){
+          return "早上";
+        }
+        else if(hour >= 12 && hour < 20){
+          return "下午";
+        }
+        else if(hour >= 20 || hour < 4){
+          return "晚上"
+        }
+      }
+    },
   },
   methods:{
     goBack(){
       this.$router.go(-1);
     },
-    seeToDo(){
+    seeToDo(scope){
+      this.form = this.todoData[scope.$index];
       this.dialogFormVisible = true;
     },
     onSubmit(){
       this.dialogFormVisible = false;
     },
-    handleClose(done) {
-      this.$confirm('确认关闭？')
-      .then(_ => {
-        done();
-      })
-      .catch(_ => {});
-    }
   }
 }
 </script>

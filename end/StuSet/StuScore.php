@@ -90,14 +90,14 @@
     ]);
 
     function _getScoreALLEven($student){
-        if ($student and _hasStu($student)){
-            return [
-                _CalculationDormitory($student), 
-                _CalculationSure($student),
-                _CalculationHomework($student),
-                _CalculationReward($stuset)
-            ];
-        }
+      if ($student and _hasStu($student)){
+        return [
+          _CalculationDormitory($student), 
+          _CalculationSure($student),
+          _CalculationHomework($student),
+          _CalculationReward($student)
+        ];
+      }
     }
 
     function _CalculationDormitory($student){
