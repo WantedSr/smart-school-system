@@ -20,6 +20,7 @@
         switch ($action){
             case 'returnScoreALLEven': returnScoreALLEven(); break;
             case 'getSumScore': getSumScore(); break;
+            case 'getALLStuScore': getALLStuScore(); break;
         }
     } catch (PDOException $e) {
         echo json_encode([
@@ -54,6 +55,33 @@
             $data = _getScoreALLEven($student);
         }
     }
+
+    /**
+     * 返回每个学生的职业素养分
+     * field array （过滤数据字段）: {"semester":  192002} 不必须 
+     * filter array （过滤学生字段）: {"department":  "S0001_A_02"} 不必须
+     */
+    function getALLStuScore(){
+        global $data;
+        global $conn_stu;
+        $filter = [];
+        if (array_key_exists('filter', $_POST)){
+            $filter = (array)json_decode($_POST['filter']);
+        }
+        $stu = $conn_stu->select_more('*', $filter);
+        $list = [];
+        // var_dump($stu);
+        foreach($stu as $item){
+            $enve = _getScoreALLEven($item['userid']);
+            array_push($list, [
+                "username"=>$item['username'],
+                "userid"=>$item['userid'],
+                "sum"=> _SumALL($enve)
+            ]);
+        }
+        $data = $list;
+    }
+
 
     echo json_encode([
         'msg'=> '成功',
