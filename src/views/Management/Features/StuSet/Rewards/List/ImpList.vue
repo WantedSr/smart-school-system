@@ -86,6 +86,7 @@ export default {
       let file = ev.raw;
       if(!file) return false;
 
+      this.loading = true;
       // 读取FILE 中的数据
       let data = await readFile(file);    // 获取文件的二进制数据
       let workbook = xlsx.read(data,{ type: 'binary' });   // 通过xlsx 插件生成一个excel 目录
@@ -110,18 +111,19 @@ export default {
         return obj;
       });
 
+      this.loading = false;
       this.excelData = arr;
-      console.log(this.excelData);
+      // console.log(this.excelData);
     },
     // 上传服务器
     submitUpload(){
-      this.loading = true;
       if(this.excelData.length == 0){
         this.$message({
           message: '请上传具有实际意义的文件！',
           type: 'warning'
         });
       }else{
+        this.loading = true;
         requestAjax({
           type: 'post',
           url: "/StuSet/ProfessionFraction.php",
@@ -132,6 +134,7 @@ export default {
             campus: this.$store.state.userCampus,
             created_user: this.$store.state.userId,
           },
+          async: true,
           success:(res)=>{
             res = JSON.parse(res);
             console.log(res);

@@ -4,23 +4,12 @@
       <h1>作息管理</h1>
     </div>
     <div style="margin-bottom: 24px">
-      <el-row>
-        <el-col :lg="20" :md="18" :sm="16" :xs="12">
-        <el-button size="small" @click="onAdd" type="primary">添加</el-button>
-        <el-button size="small" @click="onDel" type="danger">删除</el-button>
-      </el-col>
-        <el-col :lg="4" :md="6" :sm="8" :xs="12">
-          <el-input
-            placeholder="输入关键字搜索"
-            v-model="search">
-            <i slot="prefix" class="el-input__icon el-icon-search"></i>
-          </el-input>
-        </el-col>
-      </el-row>
+      <el-button size="small" @click="onAdd" type="primary">添加</el-button>
+      <el-button size="small" @click="onDel" type="danger">删除</el-button>
     </div>
     <div class="semesterTable box">
       <el-table
-        :data="tableData.filter(data => !search || data.schedule_name.toLowerCase().includes(search.toLowerCase()) || data.schedule_id.toLowerCase().includes(search.toLowerCase()))"
+        :data="showTable"
         border
         size="small"
         ref="multipleTable"
@@ -30,7 +19,7 @@
         element-loading-text="拼命加载中"
         element-loading-spinner="el-icon-loading"
         element-loading-background="rgba(0, 0, 0, 0.8)"
-        :default-sort="{prop:'schedule_order',order:'ascending'}"
+        :default-sort="{prop:'schedule_order',order:'descending'}"
         style="width: 100%">
         <el-table-column
           type="selection"
@@ -51,7 +40,7 @@
           sortable>
         </el-table-column>
         <el-table-column
-          prop="schedule_order"
+          prop="schedule_order" 
           label="作息顺序"
           align="center"
           min-width="100"
@@ -104,19 +93,18 @@ import {requestAjax} from "network/request_ajax";
 export default {
   data(){
     return{
-      tableData: [],
       n: this.$route.query.n,
       multipleTable: [],
       search: "",
-      sum: 0,
       page: 1,
       total: 15,
       loading: false,
+      tableData: [],
+      showTable: [],
     }
   },
   created(){
     this.getData('*',{'campus':this.$store.state.userCampus,'status':'1'});
-    this.getDataSum();
   },
   computed:{
     getType(){
@@ -133,12 +121,25 @@ export default {
             break;
         }
       }
+    },
+    sum(){
+      return this.tableData.length;
     }
   },
   methods:{
     setPage(page){
       this.page = page;
-      this.getData()
+      let start = ((this.page-1)*this.total);
+      let end;
+      if(start + this.total >= this.tableData.length){
+        end = this.tableData.length;
+      }else{
+        end = start + this.total;
+      }
+      this.showTable = [];
+      for(let i = start;i < end ; i++){
+        this.showTable.push(this.tableData[i]);
+      }
     },
     toAsc(a,b){
       let val1 = a.deadline
@@ -228,50 +229,27 @@ export default {
     },
     getData(col="*",selobj=null){
       this.loading = true;
+      this.tableData = [];
+      this.showTable = [];
       requestAjax({
         url: "/base/schedule.php",
         type: 'get',
         data:{
-          type: "sel_limit_schedule",
+          type: "sel_schedule",
           col: col,
-          start: (this.page-1)*this.total,
-          num: this.total,
           selobj: selobj,
         },
         async: true,
         success:(res)=>{
           this.loading = false;
           res = JSON.parse(res);
-          this.tableData = res;
+          if(res.length > 0){
+            this.tableData = res;
+            this.setPage(1);
+          }
         },
         error:(err)=>{
           this.loading = false;
-          console.log(err);
-          this.$notify.error({
-            title: '错误',
-            message: '服务器有误！,请稍后再试！'
-          });
-        }
-      })
-    },
-    getDataSum(){
-      requestAjax({
-        url: "/base/schedule.php",
-        type: 'get',
-        data:{
-          type: "sel_schedule",
-          col: "COUNT(*)",
-          selobj: {
-            'campus':this.$store.state.userCampus,
-            'status': '1',
-          },
-        },
-        async: true,
-        success:(res)=>{
-          res = parseInt(JSON.parse(res)[0]['COUNT(*)']);
-          this.sum = res;
-        },
-        error:(err)=>{
           console.log(err);
           this.$notify.error({
             title: '错误',

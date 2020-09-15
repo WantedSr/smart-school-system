@@ -1,5 +1,5 @@
 <template>
-  <div class="impCourse">
+  <div class="impCourse" v-loading="loading">
     <div class="pagehead">
       <h1>导入课程信息</h1>
     </div>
@@ -133,6 +133,8 @@ export default {
         },
       },
 
+      loading: false,
+
       excelData: [],
     }
   },
@@ -144,6 +146,8 @@ export default {
     async handle(ev){
       let file = ev.raw;
       if(!file) return false;
+
+      this.loading = true;
 
       // 读取FILE 中的数据
       let data = await readFile(file);    // 获取文件的二进制数据
@@ -179,8 +183,9 @@ export default {
         return obj;
       });
 
+      this.loading = false;
       this.excelData = arr;
-      console.log(this.excelData);
+      // console.log(this.excelData);
     },
     // 上传服务器
     submitUpload(){
@@ -190,6 +195,7 @@ export default {
           type: 'warning'
         });
       }else{
+        this.loading = true;
         requestAjax({
           type: 'post',
           url: "/StuManagement/StuInfo/StuLibrary.php",
@@ -197,7 +203,9 @@ export default {
             type: 'imp_stu',
             arr: this.excelData,
           },
+          async: true,
           success:(res)=>{
+            this.loading = false;
             res = JSON.parse(res);
             // console.log(res);
             let arr = [];
@@ -237,6 +245,7 @@ export default {
             // this.$router.go(-1);
           },
           error:(err)=>{
+            this.loading = false;
             console.log(err);
             this.$notify.error({
               title: '错误',

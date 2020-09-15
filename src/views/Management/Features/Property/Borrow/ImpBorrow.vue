@@ -1,5 +1,5 @@
 <template>
-  <div class="impAssets">
+  <div class="impAssets" v-loading="loading">
     <div class="pagehead">
       <h1>导入领用借用资产信息</h1>
     </div>
@@ -29,6 +29,7 @@ export default {
   data(){
     return{
       form_imp:{},
+      loading: false,
     }
   },
   methods:{

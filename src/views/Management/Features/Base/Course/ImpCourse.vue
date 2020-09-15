@@ -1,5 +1,5 @@
 <template>
-  <div class="impCourse">
+  <div class="impCourse" v-loading="loading">
     <div class="pagehead">
       <h1>导入课程信息</h1>
     </div>
@@ -61,6 +61,8 @@ export default {
         },
       },
 
+      loading: false,
+
       excelData: [],
     }
   },
@@ -73,6 +75,7 @@ export default {
       let file = ev.raw;
       if(!file) return false;
 
+      this.loading = true;
       // 读取FILE 中的数据
       let data = await readFile(file);    // 获取文件的二进制数据
       let workbook = xlsx.read(data,{ type: 'binary' });   // 通过xlsx 插件生成一个excel 目录
@@ -99,6 +102,7 @@ export default {
         return obj;
       });
 
+      this.loading = false;
       this.excelData = arr;
       // console.log(this.excelData);
     },
@@ -110,6 +114,7 @@ export default {
           type: 'warning'
         });
       }else{
+        this.loading = true;
         requestAjax({
           type: 'post',
           url: "/base/course.php",
@@ -117,7 +122,9 @@ export default {
             type: 'imp_course',
             arr: this.excelData,
           },
+          async: true,
           success:(res)=>{
+            this.loading = false;
             res = JSON.parse(res);
             // console.log(res);
             let arr = [];
@@ -157,6 +164,7 @@ export default {
             this.$router.go(-1);
           },
           error:(err)=>{
+            this.loading = false;
             console.log(err);
             this.$notify.error({
               title: '错误',
