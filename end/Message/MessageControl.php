@@ -46,11 +46,11 @@
         global $data;
         $entity = $_POST['entity'] ? (array)json_decode($_POST['entity']) : null;
         
-        $commomd_message_obj = _parseEntity($entity);
+        $common_message_obj = _parseEntity($entity);
         $now = time();
-        array_push($commomd_message_obj, $now);
+        array_push($common_message_obj, $now);
         // 保存到公共信息
-        $state = $conn_message->insert($commomd_message_obj);
+        $state = $conn_message->insert($common_message_obj);
 
         if (!$state){
             return false;
@@ -184,7 +184,7 @@
         $field = [];
         foreach($need_field as $key){
             if (array_key_exists($key, $obj)){
-                if (export_obj){
+                if ($export_obj){
                     $field[$key] = $obj[$key];
                 } else {
                     array_push($field, $obj[$key]);
@@ -221,6 +221,7 @@
 
     // 上传文件 返回地址
     function _upload($file){
+        $BASE_PATH = './7c857274229edfef3883a1a1f569698c/';
         $file_name = $file["name"];
         $file_size = $file["size"];
         // 允许上传的图allowedExts片后缀
