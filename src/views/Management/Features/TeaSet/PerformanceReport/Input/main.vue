@@ -282,7 +282,7 @@ export default {
       }
     },
     down(){
-      location.href = this.$store.state.endUrl + "/StuSet/学生成绩导入模板.xlsx"
+      location.href = this.$store.state.endUrl + "/TeaManagement/Performance/教师绩效导入模板.xlsx"
     },
     handleRemove(){
       this.excelData = [];
