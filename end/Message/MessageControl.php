@@ -58,10 +58,10 @@
 
         $message_id = _getMessageIdByTime($now);
         $message_data = [$message_id];
-        $message_data = array_merge($message_data, _parseMessageObject($entity));
+        $message_data = array_merge($message_data, _parseTBM($entity));
         array_push($message_data, time());
         $status = $conn_tb_message->insert($message_data);
-
+        
         if (array_key_exists('annex', $_FILES) && $status){
             $status = _upAnnex($message_id, _parseUser($entity));
         }
@@ -217,6 +217,16 @@
             'userid'
         ];
         return _parseObject($need_field, $entity, $export_obj);
+    }
+
+    function _parseTBM($entity){
+        $need_field = [
+            'mes_type',
+            'campus',
+            'school',
+            'userid'
+        ];
+        return _parseObject($need_field, $entity);
     }
 
     // 上传文件 返回地址
