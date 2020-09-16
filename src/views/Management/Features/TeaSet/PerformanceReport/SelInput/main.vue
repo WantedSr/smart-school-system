@@ -1,125 +1,111 @@
 <template>
   <div class="subpage">
     <div class="pagehead">
-      <h1>考试查询</h1>
+      <h1>成绩导入管理</h1>
     </div>
+
     <div>
-      <el-form :inline="true" :model="form" class="demo-form-inline">
+      <el-form :inline="true" :model="sel" class="demo-form-inline">
         <el-form-item label="">
-          <el-select @change="getScore" size="small" v-model="form.semester" placeholder="查询学期">
-            <el-option v-for="(item,i) in semesterData" :key="'semester-'+i" :label="item.semester" :value="item.semesterId"></el-option>
+          <el-select size="small" v-model="form.semester" placeholder="查询学期">
+            <el-option v-for="(item,i) in semesterData" :key="'s-'+i" :label="item.semester" :value="item.semesterId"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="">
-          <el-select @change="getScore" size="small" v-model="form.department" placeholder="选择部门">
-            <el-option v-for="(item,i) in departmentData" :key="'dep-'+i" :label="item.department_name" :value="item.department_id"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="">
-          <el-select size="small" v-model="form.score" placeholder="选择成绩记录">
-            <el-option v-for="(item,i) in scoreData" :key="'score-'+i" :label="item.title" :value="item.id"></el-option>
+          <el-select @change="getClass" size="small" v-model="form.department" placeholder="选择部门">
+            <el-option v-for="(item,i) in departmentData" :key="'1-'+i" :label="item.department_name" :value="item.department_id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button size="small" @click="onSubmit" type="primary">查询</el-button>
+          <el-button type="primary" size="small" @click="onSubmit">查询</el-button>
         </el-form-item>
       </el-form>
     </div>
-    <div class="wageTable">
+
+    <div class="table">
       <el-table
-        border 
         :data="showTable"
-        size="mini"
+        size="small"
         v-loading="loading"
+        border
+        stripe
+        ref="multipleTable"
+        tooltip-effect="dark"
+        @selection-change="handleSelectionChange"
         element-loading-text="拼命加载中"
         element-loading-spinner="el-icon-loading"
         element-loading-background="rgba(0, 0, 0, 0.8)"
-        stripe
-        style="width: 100%">
-        <el-table-column min-width="30" align="center" label="序号" type="index"></el-table-column>
+        style="width: 100%;">
         <el-table-column
-          prop="semester"
-          min-width="110"
-          sortable
-          label="学期">
+          type="index"
+          label="序号"
+          align="center"
+          width="50">
         </el-table-column>
         <el-table-column
-          prop="student"
-          min-width="100"
+          prop="date"
           sortable
-          label="学生学号">
-        </el-table-column>
-        <el-table-column
-          prop="student_name"
-          min-width="100"
-          sortable
-          label="学生姓名">
-        </el-table-column>
-        <el-table-column
-          prop="course_name"
-          min-width="100"
-          sortable
-          label="科目">
-        </el-table-column>
-        <el-table-column
-          prop="score"
-          min-width="100"
-          label="分数">
+          align="center"
+          label="导入日期">
           <template v-slot="scope">
-            {{ scope.row.score + ' 分' }}
+            {{ getDate(scope.row.addTime) }}
           </template>
         </el-table-column>
         <el-table-column
-          prop="rank"
-          min-width="100"
-          label="排名">
+          prop="title"
+          sortable
+          align="center"
+          label="文件名">
+        </el-table-column>
+        <el-table-column
+          prop="created_user"
+          sortable
+          width="130"
+          align="center"
+          label="教师">
+        </el-table-column>
+        <el-table-column
+          prop="num"
+          sortable
+          align="center"
+          width="90"
+          label="人数">
+        </el-table-column>
+        <el-table-column
+          prop="do"
+          sortable
+          align="center"
+          width="100"
+          label="操作">
           <template v-slot="scope">
-            {{ scope.row.rank + ' 位' }}
+            <el-button type="danger" @click="onDel(scope.row.id)" size="small">撤回</el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
+    
     <limit @setPage="setPage" :total="total" :sum="sum"></limit>
   </div>
 </template>
 
 <script>
-import Limit from "../../Limit/main";
+import * as sysTool from "assets/js/systemTool";
+import Limit from "../../../Limit/main";
 import {requestAjax} from "network/request_ajax";
 export default {
-  watch: {
-    filterText(val) {
-      this.$refs.tree.filter(val);
-    }
-  },
-
-  methods: {
-    filterNode(value, data) {
-      if (!value) return true;
-      return data.label.indexOf(value) !== -1;
-    }
-  },
   data(){
     return {
-      filterText: "",
       form:{
         semester: this.$store.state.semester,
         department: this.$store.state.userDepartment,
-        score: "",
       },
-      data:[],
-      defaultProps: {
-        children: 'children',
-        label: 'label'
-      },
+      tableData:[],
+      showTable: [],
 
       semesterData: [],
       departmentData: [],
-      classData: [],
-      scoreData: [],
 
-      tableData: [],
-      showTable: [],
+      loading: false,
       
       page: 1,
       total: 50,
@@ -128,7 +114,7 @@ export default {
   created(){
     this.getSemester();
     this.getDepartment();
-    this.getScore();
+    this.onSubmit();
   },
   methods:{
     setPage(page){
@@ -192,54 +178,18 @@ export default {
         }
       })
     },
-    getScore(){
-      this.form.score = "";
-      this.scoreData = [];
+    onSubmit(){
+      this.tableData = [];
+      this.showTable = [];
       this.loading = true;
       requestAjax({
-        url: "/StuSet/Score.php",
+        url: "/TeaManagement/Performance/Performance.php",
         type: "post",
         data:{
           action: "getImp",
           request: JSON.stringify({
             semester: this.form.semester,
             department: this.form.department,
-          }),
-        },
-        success:(res)=>{
-          this.loading = false;
-          res = JSON.parse(res);
-          // console.log(res);
-          if(res.data.length > 0){
-            let data = res.data;
-            data.sort((a,b)=>b.addTime - a.addTime);
-            this.scoreData = data;
-          }
-        },
-        async: true,
-        error:(err)=>{
-          this.loading = false;
-          console.log(err);
-          this.$notify.error({
-            title: '错误',
-            message: '服务器有误！,请稍后再试！'
-          });
-        }
-      })
-    },
-    onSubmit(){
-      this.tableData = [];
-      this.showTable = [];
-      this.loading = true;
-      requestAjax({
-        url: "/StuSet/Score.php",
-        type: "post",
-        data:{
-          action: "get",
-          request: JSON.stringify({
-            semester: this.form.semester,
-            department: this.form.department,
-            imp_id: this.form.score,
           }),
         },
         success:(res)=>{
@@ -264,8 +214,70 @@ export default {
         }
       })
 
-    }
-  },
+    },
+    onDel(id){
+      if(id != ''){
+        this.$confirm('是否确定删除该记录？', '确认删除？', {
+          distinguishCancelAndClose: true,
+          confirmButtonText: '确定',
+          cancelButtonText: '放弃'
+        })
+        .then(()=>{
+          this.loading = true;
+          requestAjax({
+            url: "/StuSet/Score.php",
+            type: 'post',
+            data:{
+              action: "del",
+              id: id,
+            },
+            async: true,
+            success:(res)=>{
+              this.loading = false;
+              // res = JSON.parse(res);
+              if(res.data){
+                this.$message({
+                  message: '删除成功',
+                  type: 'success'
+                });
+                
+                // 日志写入
+                let obj = {
+                  content: "删除学生成绩信息导入记录",
+                  type: "删除记录",
+                  model: "成绩导入模块",
+                  ip: sessionStorage.getItem('ip'),
+                  user: this.$store.state.userId,
+                  area: sessionStorage.getItem("area"),
+                  brower: sysTool.GetCurrentBrowser(),
+                  addTime: new Date().getTime(),
+                }
+                let arr = Object.values(obj);
+                this.$store.commit("writeLog",arr);
+
+                this.onSubmit();
+              }else{
+                this.$message.error('删除失败，请稍后再试！');
+              }
+            },
+            error:(err)=>{
+              this.loading = false;
+              console.log(err);
+              this.$notify.error({
+                title: '错误',
+                message: '服务器有误！,请稍后再试！'
+              });
+            }
+          })
+        })
+        .catch(action=>{
+          this.$message('取消操作');
+        })
+      }else{
+        this.$message.error('请选择选项后在进行操作！');
+      }
+    }, 
+},
   computed:{
     sum(){
       return this.tableData.length;
@@ -289,8 +301,8 @@ export default {
 }
 </script>
 
-<style scoped>
-  .wageTable{
-    margin-bottom: 12px;
+<style>
+  .table{
+    margin-bottom: 24px;
   }
 </style>

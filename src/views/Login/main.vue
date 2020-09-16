@@ -15,8 +15,8 @@
             <input type="button" @click="login" id="btn_login" value="登录"/>
           </div>
           <div id="three_id">
-            <img id="wx_img" src="~assets/images/wx1.png" @click="wxewmshow">
-            <img id="dd_img" src="~assets/images/dd.png" @click="ddewmshow">
+            <!-- <img id="wx_img" src="~assets/images/wx1.png" @click="wxewmshow"> -->
+            <!-- <img id="dd_img" src="~assets/images/dd.png" @click="ddewmshow"> -->
             <!-- <a id="forget_pwd" href="./loginzc/register.php">忘记密码</a> -->
           </div>
         </form>

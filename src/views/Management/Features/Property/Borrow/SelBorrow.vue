@@ -22,7 +22,7 @@
             <el-form-item>
               <el-button size="small" type="primary" @click="onSubmit">查询</el-button>
               <el-button size="small" type="success" @click="onAdd">添加</el-button>
-              <el-button size="small" type="warning" @click="onImp">导入</el-button>
+              <!-- <el-button size="small" type="warning" @click="onImp">导入</el-button> -->
               <el-button size="small" type="danger">删除</el-button>
             </el-form-item>
           </el-form>

@@ -128,6 +128,8 @@ const TeacherToday = ()=>import("views/Teacher/Teacher_Today/main");
       const Dormitory_Patrol_BreachDiscipline = ()=>import('views/Management/Features/Dormitory/Patrol/BreachDiscipline/main');
 
   const Finance_Wage = ()=>import("views/Management/Features/Finance/Wage/main");
+      const Finance_Wage_Input = ()=>import("views/Management/Features/Finance/Wage/Input/main");
+      const Finance_Wage_SelInput = ()=>import("views/Management/Features/Finance/Wage/SelInput/main");
   const Finance_Revenue = ()=>import("views/Management/Features/Finance/Revenue/main");
 
   const Property_Borrow = ()=>import('views/Management/Features/Property/Borrow/main');
@@ -154,6 +156,9 @@ const TeacherToday = ()=>import("views/Teacher/Teacher_Today/main");
 
   const TeaSet_OnBoarding = ()=>import("views/Management/Features/TeaSet/OnBoarding/main");
   const TeaSet_PerformanceReport = ()=>import("views/Management/Features/TeaSet/PerformanceReport/main");
+      const TeaSet_PerformanceReport_Input = ()=>import("views/Management/Features/TeaSet/PerformanceReport/Input/main");
+      const TeaSet_PerformanceReport_SelInput = ()=>import("views/Management/Features/TeaSet/PerformanceReport/SelInput/main");
+
   const TeaSet_PerformanceSummary = ()=>import("views/Management/Features/TeaSet/PerformanceSummary/main");
   const TeaSet_Mine = ()=>import("views/Management/Features/TeaSet/Mine/main");
       const TeaSet_Mine_SelEducation = ()=>import("views/Management/Features/TeaSet/Mine/SelEducation");
@@ -900,6 +905,22 @@ const routes = [
             meta: {
               roles: "10031",
             },
+            children:[
+              {
+                path: "/management/finance/wage",
+                redirect: "/management/finance/wage/input",
+              },
+              {
+                path: "input",
+                name: "Finance_Wage_Input",
+                component: Finance_Wage_Input
+              },
+              {
+                path: "sel_input",
+                name: "Finance_Wage_SelInput",
+                component: Finance_Wage_SelInput
+              },
+            ]
           },
           {
             path: "finance/revenue",
@@ -1108,6 +1129,22 @@ const routes = [
             meta: {
               roles: "10063",
             },
+            children:[
+              {
+                path: "/management/teaset/performance_report",
+                redirect: "/management/teaset/performance_report/input",
+              },
+              {
+                path: "input",
+                name: "TeaSet_PerformanceReport_Input",
+                component: TeaSet_PerformanceReport_Input
+              },
+              {
+                path: "sel_input",
+                name: "TeaSet_PerformanceReport_SelInput",
+                component: TeaSet_PerformanceReport_SelInput
+              },
+            ]
           },
           {
             path: "teaset/performance_summary",
