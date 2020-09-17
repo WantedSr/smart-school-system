@@ -7,6 +7,7 @@
         $conn_message = new Link("commonly_message");
         $conn_message_annex = new Link("commonly_message_annex");
         $conn_tb_message = new Link("tb_message");
+        $conn_tb_message_read = new Link("tb_message_read");
     } catch (PDOException $e){
         echo json_encode([
             'msg'=> '服务器错误',
@@ -23,6 +24,7 @@
             case 'setMessage': setMessage(); break;
             case 'getMessageList': getMessageList(); break;
             case 'upMessage': upMessage(); break;
+            case 'readMessage': readMessage(); break;
         }
     } catch (PDOException $e) {
         echo json_encode([
@@ -39,6 +41,7 @@
      * @param annex file （附件）不必须
      * 
      * type: 1、所有人 2、学生 3、老师
+     * tb tpye: 自定义也是数值
      */
     function setMessage(){
         global $conn_message;
@@ -79,50 +82,67 @@
      * S 类用户和 T 类用户返回指定信息
      */
     function getMessageList(){
-        global $conn_message;
+        global $conn_tb_message;
         global $data;
         $userid = $_POST['userid'] ? $_POST['userid'] : null;
         $group = _checkUser($userid);
-        if ($group == 1){
-            // 不指定消息类型，直接返回所有消息
-            $data = $conn_message->select_more();
-        }
         $user = _selectTable($group, $userid);
         if ($user == null){
             return false;
         }
-        // 获取自己相关对
-        $res = $conn_message->select_more('*', [
-            "type"=> $group
-        ]);
-        // 获取所有人的通知
-        $msg_data = $conn_message->select_more('*', [
-            "type"=> 1
-        ]);
-        foreach($res as $item){
-            if ($user[$item['target']] == $item['aims']){
-                $item['files'] = _getMessageAnnex($item['id']);
-                array_push($msg_data, $item);
-            }
-        }
-        $data = $msg_data;
+        $tb_message = $conn_tb_message->select_more('*', _parseTBMFilter($user));
+        $data = _filterMessage($group, $tb_message, $user);
     }
 
     /**
      * 更新消息
      * @param id number (消息id): 1 必须
      * @param uppost array (需要更改的地方): {"aims": "S0001_A_02"} 必须
+     * @param auth array (验证字段) : {"campus": "S0001_A", "school": "S0001"} 必须
      */
     function upMessage(){
         global $data;
         global $conn_message;
+        global $conn_tb_message;
         $message_id = $_POST['id'] ? (int)$_POST['id'] : null;
+        $uppost = $_POST['uppost'] ? (array)json_decode($_POST['uppost']) : null;
+        $auth = $_POST['auth'] ? (array)json_decode($_POST['auth']) : null;
         if ($message_id == null){
             return false;
         }
-        $uppost = $_POST['uppost'] ? (array)json_decode($_POST['uppost']) : null;
+        // 新建 rule 做校验
+        $rule = _parseUser($auth, true);
+        unset($rule['userid']);
+        $rule['message_id'] = $message_id;
+        $res = $conn_tb_message->select_more('COUNT(*)', $rule)[0]['COUNT(*)'];
+        if (!$res){
+            return false;
+        }
         $uppost = _parseEntity($uppost, true);
         $state = $conn_message->update($uppost, 'id', $message_id);
+        $data = [
+            "state" => $state
+        ];
+    }
+
+    /**
+     * 阅读 可以批量
+     * @param id int （tb message 表的 id）：6 必须
+     * @param entity array (用户信息)：{"campus": "S0001_A", "school": "S0001", "userid": 2017217042}
+     */
+    function readMessage(){
+        global $data;
+        global $conn_tb_message_read;
+        $msg_id = $_POST['id'] ? (int)$_POST['id'] : null;
+        $entity = $_POST['entity'] ? (array)json_decode($_POST['entity']) : null;
+        $user_info = _parseUser($entity);
+        if (!count($user_info)){
+           return false; 
+        }
+        $read_data = [$msg_id, $user_info[2]];
+        $read_data = array_merge($read_data, $user_info);
+        array_push($read_data, time());
+        $state = $conn_tb_message_read->insert($read_data);
         $data = [
             "state" => $state
         ];
@@ -133,6 +153,41 @@
         'error'=> 'null',
         'data'=> $data
     ]);
+
+    function _isReaded($user_id, $tbm_id){
+        global $conn_tb_message_read;
+        $msgs = $conn_tb_message_read->select_more('*', [
+            'message' => $tbm_id,
+            'created_user' => $user_id
+        ]);
+        return count($msgs) ? true : false;
+    }
+
+    function _filterMessage($group, $message, $user){
+        global $conn_message;
+        $res = [];
+        foreach($message as $mitem){
+            $msg = $conn_message->select_more('*', [
+                "id" => $mitem['message_id']
+            ])[0];
+            $msg['tb_id'] = $mitem['id'];
+            array_push($res, $msg);
+        }
+        // var_dump($res);
+        if ($group == 1){
+            // 不指定消息类型，直接返回所有消息
+            return $res;
+        }
+        $msg_data = [];
+        foreach($res as $item){
+            if ($user[$item['target']] == $item['aims'] && ($item['type'] == $group || $item['type'] == 1)){
+                $item['files'] = _getMessageAnnex($item['id']);
+                $item['read'] = _isReaded($user['userid'], $item['tb_id']);
+                array_push($msg_data, $item);
+            }
+        }
+        return $msg_data;
+    }
 
     function _getMessageAnnex($message_id){
         global $conn_message_annex;
@@ -194,13 +249,13 @@
         return $field;
     }
 
-    function _parseUser($entity){
+    function _parseUser($entity, $export_obj=false){
         $need_field = [
             'campus',
             'school',
             'userid'
         ];
-        return _parseObject($need_field, $entity);
+        return _parseObject($need_field, $entity, $export_obj);
     }
 
     function _parseEntity($entity, $export_obj=false){
@@ -227,6 +282,14 @@
             'userid'
         ];
         return _parseObject($need_field, $entity);
+    }
+
+    function _parseTBMFilter($entity){
+        $need_field = [
+            'campus',
+            'school'
+        ];
+        return _parseObject($need_field, $entity, true);
     }
 
     // 上传文件 返回地址
@@ -270,7 +333,7 @@
             $name,
             $path
         ];
-        array_merge($obj, $user_info);
+        $obj = array_merge($obj, $user_info);
         array_push($obj, time());
         return $conn_message_annex->insert($obj);
     }
