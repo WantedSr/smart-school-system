@@ -55,7 +55,7 @@
           <editor-bar v-model="form.content" :isClear="isClear" @change="change"></editor-bar>
         </el-form-item>
         <el-form-item prop="" label="附件">
-          <input type="file" ref="clearFile" @change="getFile($event)" multiple="multiplt" class="add-file-right-input" style="margin-left:70px;" accept=".docx,.doc,.xls,.xlsx,.pdf">
+          <input type="file" ref="clearFile" @change="getFile($event)" multiple="multiplt" class="add-file-right-input" style="margin-left:70px;" accept=".rar,.zip,.7z">
         </el-form-item>
         <el-form-item>
           <el-button size="small" type="primary" @click="onSubmit('form')">立即创建</el-button>
@@ -175,36 +175,6 @@ export default {
     onExit(){
       location.href = '/management/backstage';
     },
-    getCourse(){
-      this.loading = true;
-      this.form.course = '';
-      this.getClassInfo();
-      requestAjax({
-        url: "/teach/ClassCourse.php",
-        type: 'get',
-        data:{
-          type: "sel_course_name",
-          semester: this.$store.state.semester,
-          class: this.form.class,
-          skill: this.classInfo['class_skill'],
-        },
-        async: false,
-        success:(res)=>{
-          this.loading = false;
-          res = JSON.parse(res);
-          this.classCourse = res;
-          // console.log(res);
-        },
-        error:(err)=>{
-          this.loading = false;
-          console.log(err);
-          this.$notify.error({
-            title: '错误',
-            message: '服务器有误！,请稍后再试！'
-          });
-        }
-      })
-    },
     onSubmit(formName){
       this.$refs[formName].validate((valid) => {
         if (valid) {
@@ -224,33 +194,12 @@ export default {
           }
           this.form.addTime = new Date().getTime();
 
-          fileUpload({
-            type: "post",
-            url: "/Message/message.php",
-            secureuri:false,
-            fileElementId:'filemsg',
-            dataType: 'content',
+          requestAjax({
+            type: 'post',
+            url: "/Message/MessageControl.php",
             data:{
-              type: 'add_annes',
-              file: this.addArr,
-              message: this.form,
-            },
-            success:(data,status)=>{
-
-                //对返回结果的处理程序
-                console.log(data);
-
-            },
-            error:(data,status,e)=>{
-
-              this.$message.error({
-                message: "上传失败，请稍后再试或联系网络管理员",
-              });
-              //对返回结果的处理程序
-              console.log(data);
-              console.log(status);
-              console.log(e);
-
+              action: "setMessage",
+              entiry: JSON.stringify(this.form),
             }
           })
 
@@ -261,6 +210,7 @@ export default {
       });
     },
     getFile(item){
+      console.log(event);
       var file = event.target.files;
       for(var i = 0;i<file.length;i++){
         // 上传类型判断
@@ -269,7 +219,7 @@ export default {
         if (idx != -1){
           var ext = imgName.substr(idx+1).toUpperCase();   
           ext = ext.toLowerCase( ); 
-          if (ext!='pdf' && ext!='doc' && ext!='docx' && ext != 'xls' && ext != 'xlsx'){
+          if (ext!='rar' && ext!='zip' && ext!='7z'){
             this.$message({
               message: "请上传有意义的文件！",
               type: "warning",
