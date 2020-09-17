@@ -25,6 +25,7 @@
             case 'getMessageList': getMessageList(); break;
             case 'upMessage': upMessage(); break;
             case 'readMessage': readMessage(); break;
+            case 'delMessage': delMessage(); break;
         }
     } catch (PDOException $e) {
         echo json_encode([
@@ -96,9 +97,9 @@
 
     /**
      * 更新消息
-     * @param id number (消息id): 1 必须
+     * @param id number (commonly id): 1 必须
      * @param uppost array (需要更改的地方): {"aims": "S0001_A_02"} 必须
-     * @param auth array (验证字段) : {"campus": "S0001_A", "school": "S0001"} 必须
+     * @param auth array (验证字段) : {"campus": "S0001_A", "school": "S0001", "id": 7} 必须
      */
     function upMessage(){
         global $data;
@@ -110,12 +111,7 @@
         if ($message_id == null){
             return false;
         }
-        // 新建 rule 做校验
-        $rule = _parseUser($auth, true);
-        unset($rule['userid']);
-        $rule['message_id'] = $message_id;
-        $res = $conn_tb_message->select_more('COUNT(*)', $rule)[0]['COUNT(*)'];
-        if (!$res){
+        if (!_authMessage($auth, $auth['id'])){
             return false;
         }
         $uppost = _parseEntity($uppost, true);
@@ -133,16 +129,49 @@
     function readMessage(){
         global $data;
         global $conn_tb_message_read;
+        // $msg_id = $_POST['id'] ? (array)json_decode($_POST['id']) : null;
         $msg_id = $_POST['id'] ? (int)$_POST['id'] : null;
         $entity = $_POST['entity'] ? (array)json_decode($_POST['entity']) : null;
         $user_info = _parseUser($entity);
         if (!count($user_info)){
-           return false; 
+           return false;
         }
+        // $read_data = _generateReadData($msg_id, $user_info);
+        // $state = $conn_tb_message_read->insert_more(['id', 
+        // 'message', 
+        // 'user', 
+        // 'campus', 
+        // 'school', 
+        // 'created_user', 
+        // 'addTime'],$read_data);
         $read_data = [$msg_id, $user_info[2]];
         $read_data = array_merge($read_data, $user_info);
         array_push($read_data, time());
         $state = $conn_tb_message_read->insert($read_data);
+        $data = [
+            "state" => $state
+        ];
+    }
+
+    /**
+     * 删除消息
+     * @param id int （tb message 表的 id）：6 必须
+     * @param auth array (验证字段) : {"campus": "S0001_A", "school": "S0001"} 必须
+     * 
+     * 只是删除 tb message 里面的数据
+     */
+    function delMessage(){
+        global $conn_tb_message;
+        global $data;
+        $message_id = $_POST['id'] ? (int)$_POST['id'] : null;
+        $auth = $_POST['auth'] ? (array)json_decode($_POST['auth']) : null;
+        if ($message_id == null){
+            return false;
+        }
+        if (!_authMessage($auth, $message_id)){
+            return false;
+        }
+        $state = $conn_tb_message->delete('id', $message_id);
         $data = [
             "state" => $state
         ];
@@ -153,6 +182,32 @@
         'error'=> 'null',
         'data'=> $data
     ]);
+
+    // function _generateReadData($msg_ids, $user_info){
+    //     global $conn_tb_message_read;
+    //     $res = $conn_tb_message_read->select_more();
+    //     $tb_id = $res[count($res) - 1]['id'] + 1;
+    //     unset($res);
+    //     $data = [];
+    //     foreach($msg_ids as $id){
+    //         $read_data = [$tb_id, $id, $user_info[2]];
+    //         $read_data = array_merge($read_data, $user_info);
+    //         array_push($read_data, time());
+    //         array_push($data, $read_data);
+    //         $tb_id+=1;
+    //     }
+    //     return $data;
+    // }
+
+    function _authMessage($auth, $message_id){
+        global $conn_tb_message;
+        // 新建 rule 做校验
+        $rule = _parseUser($auth, true);
+        unset($rule['userid']);
+        $rule['id'] = $message_id;
+        $res = $conn_tb_message->select_more('COUNT(*)', $rule)[0]['COUNT(*)'];
+        return $res ? true : false;
+    }
 
     function _isReaded($user_id, $tbm_id){
         global $conn_tb_message_read;
@@ -297,7 +352,7 @@
         $BASE_PATH = './7c857274229edfef3883a1a1f569698c/';
         $file_name = $file["name"];
         $file_size = $file["size"];
-        // 允许上传的图allowedExts片后缀
+        // 允许上传的allowedExts片后缀
         $allowedExts = array("rar", "zip", "7z");
         $temp = explode(".", $file_name);
         $extension = end($temp);     // 获取文件后缀名
