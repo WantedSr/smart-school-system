@@ -55,7 +55,7 @@ export default {
   methods:{
     toLink(id,type){
       this.$router.push({
-        path: "/teacher/message/"+id,
+        path: "/student/message/"+id,
         query:{
           type: type,
         }

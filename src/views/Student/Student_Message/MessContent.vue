@@ -13,6 +13,13 @@
           <h2>{{ msgData['title'] }}</h2>
           <p>{{ getTarget(msgData['target']) }}&nbsp;&nbsp;{{ msgType == 'message' ? '通知' : msgType == 'homework' ? '作业' : '其它' }}&nbsp;&nbsp;发布时间：{{ getDate(msgData['addTime']) }} {{ getTime(msgData['addTime']) }}&nbsp;&nbsp;阅读次数：{{ msgData['read_num'] }}</p>
         </div>
+        <div v-if="msgType == 'homework'" class="homework_msg">
+          <ul>
+            <li><span>课程：</span>{{ msgData['course'] }}</li>
+            <li><span>作业时长：</span>{{ msgData['duration'] }}</li>
+            <li><span>类型：</span>{{ msgData['type'] }}</li>
+          </ul>
+        </div>
         <div class="messbody">
           <div v-html="msgData['content']"></div>
         </div>
@@ -47,8 +54,10 @@ export default {
       haveMsg: false,
     }
   },
-  created(){
+  mounted(){
     this.loading = true;
+    console.log(this.msgId);
+    console.log(this.$route.query.type);
     requestAjax({
       url: "/msg.php",
       type: "post",
@@ -63,13 +72,13 @@ export default {
           semester: this.$store.state.semester,
         }),
         type: 'student',
-        msgType: this.$route.query.type,
+        msgType: this.msgType,
         msgId: this.msgId,
       },
       async: true,
       success:res=>{
         res = JSON.parse(res);
-        console.log(res.data);
+        console.log(res);
         if(res.data.length < 0){
           this.$rout.go(-1);
           this.$message({
@@ -257,6 +266,18 @@ export default {
   }
   .MessBeside span{
     margin-right: 6px;
+  }
+
+  .homework_msg{
+    margin: 12px 0;
+  }
+  .homework_msg li{
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #888;
+  }
+  .homework_msg li > span{
+    color: #666;
   }
 
   @media screen and (max-width:768px){

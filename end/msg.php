@@ -96,11 +96,13 @@
           // $data = $msgId;
         }
         else if($msgType == 'homework'){
-          $data = $conn_homework("*",[
+          $data = $conn_homework->select_more("*",[
             'id'=>$msgId,
             "class"=>$request['class'],
             'campus'=>$request['campus'],
+            'semester'=>$request['semester'],
           ]);
+          // $data = $msgId;
         }
       }
       foreach($data as $key => $val){
@@ -114,6 +116,10 @@
           'message'=>$msgId,
           'campus'=>$request['campus'],
         ])[0]['COUNT(*)'];
+        if($msgType == 'homework'){
+          $course = $val['course'];
+          $data[$key]['course'] = $conn_homework->query("SELECT course_id,course_name FROM base_course WHERE course_id = '$course' AND course_campus = '$campus' AND state = 1")->fetchAll(PDO::FETCH_ASSOC)[0]['course_name'];
+        }
       }
     }
 
