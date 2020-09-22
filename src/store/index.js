@@ -73,6 +73,7 @@ export default new Vuex.Store({
               state.campus_name = res['info']['campus_name'];
               state.userAuthority = JSON.parse(res['info']['authority'] ? res['info']['authority'] : null);
               state.userClass = res['info']['class'];
+              state.userGrade = res['info']['grade'];
               // console.log(res['info']);
               let $old = state.semester_start;
               let $new = new Date().getTime();

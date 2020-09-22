@@ -21,10 +21,10 @@ function requestAjax(obj){
       }
     },
     async: obj.async == undefined ? true : obj.async,
-    // cache: obj.cache ? obj.cache : true,
-    // processData: obj.processData ? obj.processData : true,
-    // contentType: obj.contentType ? obj.contentType : "application/x-www-form-urlencoded",
-    // dataType: obj.dataType,
+    cache: obj.cache !== undefined ? obj.cache : true,
+    processData: obj.processData !== undefined ? obj.processData : true,
+    contentType: obj.contentType !== undefined ? obj.contentType : "application/x-www-form-urlencoded",
+    dataType: obj.dataType,
   })
 }
 

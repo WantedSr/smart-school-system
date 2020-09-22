@@ -1,5 +1,5 @@
 <template>
-  <div class="subpage">
+  <div class="subpage" v-loading="loading">
 
     <div class="pagehead">
       <h1>通知发送</h1>
@@ -23,7 +23,6 @@
             <el-option v-if="form.type == 'student'" label="年级" value="grade"></el-option>
             <el-option label="部门" value="department"></el-option>
             <el-option label="校区" value="campus"></el-option>
-            <el-option label="学校" value="school"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item v-if="form.target == 'class'" prop="" label="选择班级">
@@ -41,21 +40,23 @@
             <el-option v-for="(item,i) in departmentData" :key="'d-'+i" :label="item.department_name" :value="item.department_id"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="form.target == 'campus'" prop="" label="选择校区">
-          <el-select size="small" v-model="form.aims" placeholder="选择校区">
-            <el-option v-for="(item,i) in campusData" :key="'campus-'+i" :label="item.campus_name" :value="item.campus_id"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item v-if="form.target == 'school'" prop="" label="选择学校">
-          <el-select size="small" v-model="form.aims" placeholder="选择学校">
-            <el-option v-for="(item,i) in schoolData" :key="'s-'+i" :label="item.school_name" :value="item.school_id"></el-option>
-          </el-select>
-        </el-form-item>
         <el-form-item prop="" label="内容">
           <editor-bar v-model="form.content" :isClear="isClear" @change="change"></editor-bar>
         </el-form-item>
         <el-form-item prop="" label="附件">
-          <input type="file" ref="clearFile" @change="getFile($event)" multiple="multiplt" class="add-file-right-input" style="margin-left:70px;" accept=".rar,.zip,.7z">
+          <el-upload
+            class="upload-demo"
+            :limit="1" 
+            ref="upload"
+            accept="application/x-zip-compressed,application/octet-stream,application/x-rar,application/x-7z-compressed,application/zip"
+            :multiple="false" 
+            :on-change="getFile" 
+            :on-preview="handlePreview"
+            :on-remove="handleRemove"
+            :auto-upload="false">
+            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+            <div slot="tip" class="el-upload__tip">只能一个上传压缩包文件，且不超过10MB</div>
+          </el-upload>
         </el-form-item>
         <el-form-item>
           <el-button size="small" type="primary" @click="onSubmit('form')">立即创建</el-button>
@@ -87,6 +88,8 @@ export default {
         created_user: this.$store.state.userId,
         addTime: "",
       },
+
+      loading: false,
 
       rules:{
         title: [
@@ -126,7 +129,7 @@ export default {
       gradeData: [],
       classData: [],
 
-      addArr: [],
+      file: [],
     }
   },
   components:{
@@ -144,34 +147,6 @@ export default {
     change(val){
       this.form.content = val;
     },
-    getClassInfo(){
-      this.loading = true;
-      requestAjax({
-        url: "/base/class.php",
-        type: 'get',
-        data:{
-          type: "sel_class",
-          selobj: {
-            "class_id":this.form.class,
-          },
-        },
-        async: false,
-        success:(res)=>{
-          this.loading = false;
-          res = JSON.parse(res)[0];
-          // console.log(res);
-          this.classInfo = res;
-        },
-        error:(err)=>{
-          this.loading = false;
-          console.log(err);
-          this.$notify.error({
-            title: '错误',
-            message: '服务器有误！,请稍后再试！'
-          });
-        }
-      });
-    },
     onExit(){
       location.href = '/management/backstage';
     },
@@ -185,6 +160,9 @@ export default {
             })  
             return false;
           }
+          if(this.form.target == 'campus'){
+            this.form.aims = this.$store.state.userCampus;
+          }
           if(this.form.aims == ''){
             this.$message({
               message: "请选择通知对象范围",
@@ -192,14 +170,42 @@ export default {
             })  
             return false;
           }
+          this.loading = true;
           this.form.addTime = new Date().getTime();
-
+          let formdata = new FormData();
+          formdata.append("entity",JSON.stringify(this.form));
+          formdata.append("annex",this.file);
+          formdata.append("action","setMessage");
           requestAjax({
             type: 'post',
-            url: "/Message/MessageControl.php",
-            data:{
-              action: "setMessage",
-              entiry: JSON.stringify(this.form),
+            url: "/Message/Message.php",
+            data: formdata,
+            dataType: 'json', // 传递数据的格式
+            async: false, // 这是重要的一步，防止重复提交的
+            cache: false,  // 设置为false，上传文件不需要缓存。
+            contentType: false, // 设置为false,因为是构造的FormData对象,所以这里设置为false。
+            processData: false, // 设置为false,因为data值是FormData对象，不需要对数据做处理。
+            success:res=>{
+              this.loading = false;
+              // console.log(res);
+              let data = res.data;
+              if(data.type == 'success'){
+                this.$message({
+                  type: 'success',
+                  message: "添加成功",
+                });
+                location.reload();
+              }else{
+                this.$message.error(data.info);
+              }
+            },
+            error:err=>{
+              this.loading = false;
+              console.error(err);
+              this.$notify.error({
+                title: '错误',
+                message: '服务器有误！,请稍后再试！'
+              });
             }
           })
 
@@ -209,34 +215,36 @@ export default {
         }
       });
     },
-    getFile(item){
-      console.log(event);
-      var file = event.target.files;
-      for(var i = 0;i<file.length;i++){
-        // 上传类型判断
-        var imgName = file[i].name;
-        var idx = imgName.lastIndexOf(".");  
-        if (idx != -1){
-          var ext = imgName.substr(idx+1).toUpperCase();   
-          ext = ext.toLowerCase( ); 
-          if (ext!='rar' && ext!='zip' && ext!='7z'){
-            this.$message({
-              message: "请上传有意义的文件！",
-              type: "warning",
-            });
-            return false;
-          }else{
-            this.addArr.push(file[i]);
-          }   
-        }else{
+    getFile(f,fl){
+      this.loading = true;
+      var file = f.raw;
+      //   // 上传类型判断
+      let imgName = file.name;
+      let idx = imgName.lastIndexOf(".");  
+      if (idx != -1){
+        var ext = imgName.substr(idx+1).toUpperCase();   
+        ext = ext.toLowerCase(); 
+        if (ext!='rar' && ext!='zip' && ext!='7z'){
+          this.loading = false;
           this.$message({
             message: "请上传有意义的文件！",
             type: "warning",
           });
+          this.$refs.upload.clearFiles();
           return false;
-        }
+        }else{
+          this.loading = false;
+          this.file = file;
+        }   
+      }else{
+        this.loading = false;
+        this.$message({
+          message: "请上传有意义的文件！",
+          type: "warning",
+        });
+        this.$refs.upload.clearFiles();
+        return false;
       }
-      console.log(this.addArr);
     },
     getSchool(){
       this.loading = true;

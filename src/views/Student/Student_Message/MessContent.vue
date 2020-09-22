@@ -1,81 +1,195 @@
 <template>
-  <div class="messContent">
+  <div class="messContent" v-loading="loading">
     <div class="mess box">
       <div class="messdo">
         <el-row>
-          <el-col :span="12" :xs="24">
+          <el-col :lg="12" :xs="24" style="margin-bottom: 12px">      
             <el-page-header @back="goMess" content="我的通知"></el-page-header>
-          </el-col>
-          <el-col :span="12" :xs="24" style="text-align: right">
-            <el-button size="small">小</el-button>
-            <el-button size="small">中</el-button>
-            <el-button size="small">大</el-button>
           </el-col>
         </el-row>
       </div>
       <div class="messmain">
         <div class="messtitle">
-          <h2>这是一篇示例文本</h2>
-          <p>部门&nbsp;&nbsp;通知&nbsp;&nbsp;发布时间：2020-04-12 12:53:03&nbsp;&nbsp;阅读次数：167</p>
+          <h2>{{ msgData['title'] }}</h2>
+          <p>{{ getTarget(msgData['target']) }}&nbsp;&nbsp;{{ msgType == 'message' ? '通知' : msgType == 'homework' ? '作业' : '其它' }}&nbsp;&nbsp;发布时间：{{ getDate(msgData['addTime']) }} {{ getTime(msgData['addTime']) }}&nbsp;&nbsp;阅读次数：{{ msgData['read_num'] }}</p>
         </div>
         <div class="messbody">
-          <p style="text-align:left;color:#333;text-indent:0">这是一篇示例文本:</p>
-          <p style="padding: 0 24px">这是一篇示例文本这是一篇示例文本这是一篇示例文本这是一篇示例文本这是一篇示例文本
-            根据宝安区教育局《关于开展“孩子心理危机识别与干预”家长培训的通知》要求，结合我校实际，决定组织教师及家长参加“孩子心理危机识别与干预”培训工作。现就有关事项通知如下：
-          </p>
-          <p style="padding: 0 24px">一、 培训时间</p>
-          <p style="padding: 0 24px">4 月 13 日（周一）晚上8：00—9：30</p>
-          <p style="padding: 0 24px">二、培训对象</p>
-          <p style="padding: 0 24px">全体教师及学生家长</p>
-          <p style="padding: 0 24px">三、培训方式</p>
-          <p style="padding: 0 24px">主讲人：攸佳宁 （华南师范大学教授）</p>
-          <p style="padding: 0 24px">（一）  可以按时收看宝安第一课电视频道；</p>
-          <p style="padding: 0 24px">（二）  或者关注活动当天“宝安教育”微信公众号平台推送的活动链接，扫描活动二维码在线收看。</p>
-          <p style="padding: 0 24px">这是一篇示例文本这是一篇示例文本这是一篇示例文本这是一篇示例文本这是一篇示例文本
-            这是一篇示例文本这是一篇示例文本这是一篇示例文本这是一篇示例文本这是一篇示例文本
-          </p>
-          <br>
-          <br>
-          <br>
-          <br>
-          <p style="text-align:right;">这是一篇示例文本</p>
-          <p style="text-align:right;">2020年4月13日</p>
+          <div v-html="msgData['content']"></div>
         </div>
       </div>
-      <div class="MessBeside">
+      <div class="MessBeside" v-if="msgData['annex'] != undefined && msgData['annex'] != null && msgData['annex'] != ''">
         <ul>
           <li>
-            <a href="#"><span>附件:</span>这是一段示例文本</a>
-          </li>
-          <li>
-            <a href="#"><span>附件:</span>这是一段示例文本</a>
+            <a target="_blank" :href="$store.state.endUrl + '/Message/annex/' + msgData['annex']['filename']"><span>附件下载<i class="el-icon-download"></i></span></a>
           </li>
         </ul>
-      </div>
-      <div class="MessDo">
-        <el-link :underline="false"><i class="el-icon-download"></i> 打印</el-link>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import {requestAjax} from "network/request_ajax";
 export default {
   data(){
     return{
-      
-    } 
+      msgId: this.$route.params.msg_id,
+      loading: false,
+      msgData: {
+        title: "",
+        target: "",
+        addTime: "",
+        read_num: "",
+        content: '',
+        annex: "",
+      },
+      msgType: this.$route.query.type,
+      haveMsg: false,
+    }
+  },
+  created(){
+    this.loading = true;
+    requestAjax({
+      url: "/msg.php",
+      type: "post",
+      data:{
+        action: "getMessage",
+        request: JSON.stringify({
+          campus: this.$store.state.userCampus,
+          department: this.$store.state.userDepartment,
+          grade: this.$store.state.userGrade,
+          class: this.$store.state.userClass,
+          userid: this.$store.state.userId,
+          semester: this.$store.state.semester,
+        }),
+        type: 'student',
+        msgType: this.$route.query.type,
+        msgId: this.msgId,
+      },
+      async: true,
+      success:res=>{
+        res = JSON.parse(res);
+        console.log(res.data);
+        if(res.data.length < 0){
+          this.$rout.go(-1);
+          this.$message({
+            message: "路由有误，请重新进入",
+            type: 'warning',
+          });
+          return;
+        }else{
+          this.msgData = res.data[0];
+          this.haveMsg = true;
+        }
+        this.readMsg();
+        this.loading = false;
+      },
+      error:err=>{
+        this.loading = false;
+        console.error(err);
+        this.$notify.error({
+          title: '错误',
+          message: '服务器有误！,请稍后再试！'
+        });
+      }
+    })
   },
   methods:{
     goMess(){
-      this.$router.push("/student/message");
+      location.href = '/student/message';
+    },
+    readMsg(){
+      requestAjax({
+        url: "/msg.php",
+        type: "post",
+        data:{
+          action: 'readMessage',
+          arr: JSON.stringify([
+            this.msgId,
+            this.$store.state.userId,
+            this.$store.state.userCampus,
+            this.$store.state.userSchool,
+            this.$store.state.userId,
+            new Date().getTime(),
+          ]),
+        },
+        async: true,
+        success:res=>{
+          res = JSON.parse(res);
+          console.log(res);
+          if(res.data == 'repeat'){
+            return;
+          }
+          else if(res.data){
+            this.$message({
+              message:'消息阅读记录成功',
+              type: 'success',
+            });
+          }
+          else{
+            this.$message.error('消息阅读记录失败，请尝试重新进入页面');
+          }
+        },
+        error:err=>{
+          console.err(err);
+          this.$message.error("消息已读记录失败,请尝试重新进入页面");
+        }
+      });
     }
-  }
+  },
+  computed:{
+    sum(){
+      return this.tableData.length;
+    },
+    getTarget(){
+      return (t)=>{
+        switch(t){
+          case "class":
+            return "班级"
+            break;
+          case "grade":
+            return "年级"
+            break;
+          case "department":
+            return "部门"
+            break;
+          case "campus":
+            return "校区"
+            break;
+        }
+      }
+    },
+    getDate(){
+      return (s)=>{
+        let date = new Date();
+        date.setTime(s);
+        let y = date.getFullYear();
+        let m = date.getMonth() + 1;
+        m = String(m).length == 1 ? '0'+m : m;
+        let d = date.getDate();
+        d = String(d).length == 1 ? '0'+d : d;
+        return y+"-"+m+"-"+d;
+      }
+    },
+    getTime(){
+      return (s)=>{
+        let date = new Date();
+        date.setTime(s);
+        let h = date.getHours();
+        let m = date.getMinutes();
+        m = String(m).length == 1 ? '0'+m : m;
+        let se = date.getSeconds();
+        se = String(se).length == 1 ? '0'+se : se;
+        return h+":"+m+":"+se;
+      }
+    },
+  },
 }
 </script>
 
 <style>
   .mess>.el-page-header{
+    border-bottom: 1px solid #ccc;;
     padding-bottom: 5px;
     margin-bottom: 10px;
   }
@@ -84,6 +198,9 @@ export default {
   }
   .messdo{
     margin-bottom: 20px;
+  }
+  .messsize{
+    text-align: right;
   }
   .messmain{
     padding: 12px;
@@ -98,7 +215,7 @@ export default {
     padding-bottom: 12px;
     font-weight: 500;
     color: #333;
-    border-bottom: 1px solid rgba(128,128,128,.1);
+    border-bottom: 1px solid #ccc;
   }
   .messtitle>p{
     margin-top: 6px;
@@ -122,7 +239,7 @@ export default {
     margin-bottom: 30px;
   }
 
-
+  
   .MessBeside{
     margin-top: 10px;
     margin-bottom: 20px;
@@ -142,16 +259,30 @@ export default {
     margin-right: 6px;
   }
 
-  .MessDo{
-    
-  }
-
-  @media screen and (max-width:768px) {
+  @media screen and (max-width:768px){
+    .mess{
+      padding: 6px;
+    }
+    .messsize{
+      text-align: center;
+    }
     .messmain{
       padding: 0;
     }
+    .messtitle{
+      padding: 0;
+    }
     .messbody{
-      padding: 0; 
+      padding: 0;
+    }
+    .messtitle>h2{
+      font-size: 20px;
+    }
+    .messtitle>p{
+      font-size: 12px;
+    }
+    .messbody>p{
+      font-size: 16px;;
     }
   }
 

@@ -73,33 +73,36 @@
           'underline', // 下划线
           'strikeThrough', // 删除线
           'foreColor', // 文字颜色
-          'backColor', // 背景颜色
+          // 'backColor', // 背景颜色
           'link', // 插入链接
           'list', // 列表
           'justify', // 对齐方式
-          'quote', // 引用
-          'emoticon', // 表情
+          // 'quote', // 引用
+          // 'emoticon', // 表情
           'image', // 插入图片
           'table', // 表格
-          'video', // 插入视频
-          'code', // 插入代码
+          // 'video', // 插入视频
+          // 'code', // 插入代码
           'undo', // 撤销
-          'redo', // 重复
-          'fullscreen' // 全屏
+          // 'redo', // 重复
+          // 'fullscreen' // 全屏
         ]
 
         this.editor.customConfig.uploadImgHooks = {
           fail: (xhr, editor, result) => {
             // 插入图片失败回调
+            this.$message.error("图片插入失败！");
           },
           success: (xhr, editor, result) => {
             // 图片上传成功回调
           },
           timeout: (xhr, editor) => {
             // 网络超时的回调
+            this.$message.error("网络加载超时！");
           },
           error: (xhr, editor) => {
             // 图片上传错误的回调
+            this.$message.error("图片上传失败！");
           },
           customInsert: (insertImg, result, editor) => {
             // 图片上传成功，插入图片的回调

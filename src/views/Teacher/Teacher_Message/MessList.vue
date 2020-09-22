@@ -2,126 +2,171 @@
   <div class="MessList box por">
     <el-page-header @back="goBack" content="我的通知"></el-page-header>
     <el-table
-      ref="filterTable"
-      :data="tableData"
+      :data="showTable"
+      size="small"
+      v-loading="loading"
+      stripe
+      ref="multipleTable"
+      tooltip-effect="dark"
+      @selection-change="handleSelectionChange"
+      element-loading-text="拼命加载中"
+      element-loading-spinner="el-icon-loading"
+      element-loading-background="rgba(0, 0, 0, 0.8)"
       style="width: 100%">
       <el-table-column
         prop="date"
         label="发布日期"
         sortable
-        width="100"
-        column-key="date"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="name"
-        min-width="250"
-        label="通知名称">
-        <template slot-scope="mess">
-          <el-link :underline="false" href="/teacher/message/xxxxxxx" target="_blank">{{mess.row.address}}</el-link>
+        min-width="100"
+        column-key="date">
+        <template v-slot="scope">
+          {{ getDate(scope.row.addTime) }}
         </template>
       </el-table-column>
       <el-table-column
-        prop="tag"
-        label="类型"
-        width="100"
-        :filters="label"
-        :filter-method="filterTag"
-        filter-placement="bottom-end">
-        <template slot-scope="scope">
-          <el-tag
-            :type="scope.row.tag === '部' ? 'primary' : 'success'"
-            disable-transitions>{{scope.row.tag}}</el-tag>
+        prop="title"
+        min-width="250"
+        label="通知名称">
+        <template v-slot="scope">
+          <p size="small" href="javascript:;" @click="toLink(scope.row.message_id,scope.row.type)" :underline="false">{{scope.row.title}}</p>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="type"
+        label="情况"
+        min-width="100">
+        <template v-slot="scope">
+          <el-tag size="small" :type="scope.row.read > 0 ? '' : 'success'">{{ scope.row.read > 0 ? '已读' : 'new' }}</el-tag>
         </template>
       </el-table-column>
     </el-table>
     <div class="pagination poa">
-      <el-pagination
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        :current-page="currentPage4"
-        :page-sizes="[100, 200, 300, 400]"
-        :page-size="100"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="400">
-      </el-pagination>
+      <el-row>
+        <el-col :span="4">
+          <p style="color: #999;font-size: 14px">总共{{sum}}条记录</p>
+        </el-col>
+        <el-col :span="19" style="text-align: right">
+          <el-pagination
+            background
+            layout="prev, pager, next"
+            :pager-count="5"
+            :page-size="total"
+            @current-change="setPage"
+            :small="true"
+            :hide-on-single-page="false"
+            :total="sum">
+          </el-pagination>
+        </el-col>
+      </el-row>
     </div>
   </div>
 </template>
 
 <script>
+import {requestAjax} from "network/request_ajax";
 export default {
   data(){
     return{
-      userData: "",
-      currentPage4: 4,
-      label: [
-        { text: '部', value: '部' },
-        { text: '校', value: '校' },
-      ],
-      tableData: [{
-        date: '2016-05-02',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄',
-        tag: '部'
-      }, {
-        date: '2016-05-04',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1517 弄',
-        tag: '部'
-      }, {
-        date: '2016-05-01',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1519 弄',
-        tag: '校'
-      }, {
-        date: '2016-05-03',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1516 弄',
-        tag: '部'
-      },{
-        date: '2016-05-02',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄',
-        tag: '校'
-      }, {
-        date: '2016-05-04',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1517 弄',
-        tag: '校'
-      }, {
-        date: '2016-05-01',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1519 弄',
-        tag: '校'
-      }, {
-        date: '2016-05-03',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1516 弄',
-        tag: '部'
-      }],
+      tableData: [],
+      showTable: [],
+      loading: false,
+
+      page: 1,
+      total: 50,
     }
   },
+  created(){
+    this.getMessage();
+  },
   methods:{
-    handleSizeChange(val) {
-      console.log(`每页 ${val} 条`);
-    },
-    handleCurrentChange(val) {
-      console.log(`当前页: ${val}`);
+    setPage(page){
+      this.page = page;
+      let start = ((this.page-1)*this.total);
+      let end;
+      if(start + this.total >= this.tableData.length){
+        end = this.tableData.length;
+      }else{
+        end = start + this.total;
+      }
+      this.showTable = [];
+      for(let i = start;i < end ; i++){
+        this.showTable.push(this.tableData[i]);
+      }
     },
     goBack(){
-      this.$router.go(-1);
+      this.$router.push("/teacher/home");
     },
-    filterTag(value, row) {
-      return row.tag === value;
+    getMessage(){
+      this.msgData = [];
+      this.loading = true;
+      requestAjax({
+        type: 'post',
+        url: "/msg.php",
+        data:{
+          action: "getMessageList",
+          type: 'teacher',
+          request: JSON.stringify({
+            campus: this.$store.state.userCampus,
+            department: this.$store.state.userDepartment,
+            grade: this.$store.state.userGrade,
+            class: this.$store.state.userClass,
+            userid: this.$store.state.userId,
+            semester: this.$store.state.semester,
+          }),
+        },
+        async: true,
+        success:res=>{
+          this.loading = false;
+          res = JSON.parse(res);
+          if(res.data.length > 0){
+            this.tableData = res.data;
+            this.setPage(1);
+          }
+          console.log(res);
+        },
+        error:err=>{
+          this.loading = false;
+          console.error(err);
+          this.$notify.error({
+            title: '错误',
+            message: '服务器有误！,请稍后再试！'
+          });
+        }
+      })
     },
-  }
+    toLink(id,type){
+      this.$router.push({
+        path: "/teacher/message/"+id,
+        query:{
+          type: type,
+        }
+      });
+    }
+  },
+  computed:{
+    sum(){
+      return this.tableData.length;
+    },
+    getDate(){
+      return (s)=>{
+        let date = new Date();
+        date.setTime(s);
+        let y = date.getFullYear();
+        let m = date.getMonth() + 1;
+        m = String(m).length == 1 ? '0'+m : m;
+        let d = date.getDate();
+        d = String(d).length == 1 ? '0'+d : d;
+        return y+"-"+m+"-"+d;
+      }
+    },
+  },
 }
 </script>
 
 <style>
   .MessList{
     min-height: 755px;
+    padding-bottom: 80px;
   }
   .MessList>.el-page-header{
     margin-bottom: 10px;

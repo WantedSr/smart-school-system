@@ -289,7 +289,7 @@ const routes = [
         component: StudentCertificate,
       },
       {
-        path: "message/:messId",
+        path: "message/:msg_id",
         component: StuMessContent,
       },
     ]
@@ -312,7 +312,7 @@ const routes = [
         name: "TeacherMessage",
       },
       {
-        path: "message/:id",
+        path: "message/:msg_id",
         component: TeaMessContent,
       },
       {

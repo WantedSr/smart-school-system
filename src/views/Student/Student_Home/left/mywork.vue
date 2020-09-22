@@ -14,13 +14,13 @@
           </el-col>
           <el-col :span="8">
             <el-link :underline="false" type="warning" @click="toMessage">
-              <h1>{{newTab}}</h1>
+              <h1>{{msgNum}}</h1>
               <p>通知</p>
             </el-link>
           </el-col>
           <el-col :span="8">
             <el-link :underline="false" type="danger" @click="toMessage">
-              <h1>{{holdSee}}</h1>
+              <h1>{{hwNum}}</h1>
               <p>作业</p>
             </el-link>
           </el-col>
@@ -41,17 +41,17 @@ export default {
     }
   },
   props:{
-    newTab:{
+    msgNum:{
+      type: Number,
+      default: 0,
+    },
+    hwNum:{
       type: Number,
       default: 0,
     },
     todoNum:{
       type: Number,
       default: 3,
-    },
-    holdSee:{
-      type: Number,
-      default: 0,
     },
     show:{
       type: Boolean,

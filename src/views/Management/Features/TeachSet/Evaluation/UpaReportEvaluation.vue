@@ -40,7 +40,7 @@
           :autosize="{ minRows: 8,}">
           </el-input>
         </el-form-item>
-        <el-form-item label="课堂图片">
+        <!-- <el-form-item label="课堂图片">
           <el-upload
             action="https://jsonplaceholder.typicode.com/posts/"
             list-type="picture-card"
@@ -48,7 +48,7 @@
             :on-remove="handleRemove">
             <i class="el-icon-plus"></i>
           </el-upload>
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="">
           <el-button size="small" @click="onBack" type="">返回</el-button>
           <el-button size="small" @click="onSubmit" type="primary">提交</el-button>

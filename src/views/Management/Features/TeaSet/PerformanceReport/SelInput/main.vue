@@ -45,6 +45,7 @@
         <el-table-column
           prop="date"
           sortable
+          min-width="100"
           align="center"
           label="导入日期">
           <template v-slot="scope">
@@ -54,13 +55,14 @@
         <el-table-column
           prop="title"
           sortable
+          min-width="120"
           align="center"
           label="文件名">
         </el-table-column>
         <el-table-column
           prop="created_user"
           sortable
-          width="130"
+          min-width="130"
           align="center"
           label="教师">
         </el-table-column>
@@ -68,14 +70,14 @@
           prop="num"
           sortable
           align="center"
-          width="90"
+          min-width="90"
           label="人数">
         </el-table-column>
         <el-table-column
           prop="do"
           sortable
           align="center"
-          width="100"
+          min-width="100"
           label="操作">
           <template v-slot="scope">
             <el-button type="danger" @click="onDel(scope.row.id)" size="small">撤回</el-button>

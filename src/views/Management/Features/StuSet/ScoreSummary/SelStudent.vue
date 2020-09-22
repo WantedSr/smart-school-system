@@ -283,7 +283,9 @@ export default {
           action: "getStu",
           request: JSON.stringify(obj),
         },
+        async: true,
         success:res=>{
+          this.loading = false;
           res= JSON.parse(res);
           // console.log(res);
           if(res.data.length > 0){
@@ -292,6 +294,14 @@ export default {
             this.tableData = data;
             this.setPage(1);
           }
+        },
+        error:err=>{
+          this.loading = false;
+          console.log(err);
+          this.$notify.error({
+            title: '错误',
+            message: '服务器有误！,请稍后再试！'
+          });
         }
       })
     },

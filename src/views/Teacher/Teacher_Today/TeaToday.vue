@@ -190,4 +190,7 @@ export default {
     border-left: 2px solid #e74c3c;
     padding-left: 3px;
   }
+  .el-calendar__button-group{
+    display: none;;
+  }
 </style>

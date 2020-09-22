@@ -1,5 +1,5 @@
 <template>
-  <div class="announcement box">
+  <div class="announcement box" v-loading="loading">
     <el-row>
       <el-col :lg="24" class="head">
         <!-- <h4 class="por">今日待办<small class="poa">TO-DO Today</small></h4> -->
@@ -7,45 +7,21 @@
       </el-col>
       <el-col :lg="24" v-if="show">
         <el-row>
-          <el-col :lg="24" class="por acmItem">
+          <el-col v-for="(item,i) in msgData" :key="'msg-'+i" :lg="24" :class="{'por':true,'acmItem':true,'noread':item.read <= 0,'read':item.read > 0}">
             <el-row>
               <el-col :lg="16" :md="16" :xs="16">
-                <p><a @click="toLink()" href="#">学校召开2019-2020学年第二学期教学工作专项会</a></p>
+                <p @click="toLink(item.message_id,item.type)" href="#">{{ item.title }}</p>
               </el-col>
-              <p class="poa">20/04/02</p>
+              <p class="poa">{{ getDate(item.addTime) }}</p>
             </el-row>
           </el-col>
-          <el-col :lg="24" class="por acmItem">
-            <el-row>
-              <el-col :lg="16" :md="16" :xs="16">
-                <p><a @click="toLink()" href="#">学校召开2019-2020学年第二学期教学工作专项会</a></p>
-              </el-col>              
-              <p class="poa">20/04/02</p>
-            </el-row>
-          </el-col>
-          <el-col :lg="24" class="por acmItem">
-            <el-row>
-              <el-col :lg="16" :md="16" :xs="16">
-                <p><a @click="toLink()" href="#">学校召开2019-2020学年第二学期教学工作专项会</a></p>
-              </el-col>
-              <p class="poa">20/04/02</p>
-            </el-row>
-          </el-col>
-          <el-col :lg="24" class="por acmItem">
-            <el-row>
-              <el-col :lg="16" :md="16" :xs="16">
-                <p><a @click="toLink()" href="#">学校召开2019-2020学年第二学期教学工作专项会</a></p>
-              </el-col>
-              <p class="poa">20/04/02</p>
-            </el-row>
-          </el-col>
-          <el-col :lg="24" class="more">
+          <el-col v-if="msgData.length > 0" :lg="24" class="more">
             <el-link :underline="false" href="/teacher/message" target="_blank">查看更多</el-link>
           </el-col>
           <!-- 无公告 -->
-          <!-- <el-col :lg="24" class="nodata">
+          <el-col v-else-if="msgData.length <= 0" :lg="24" class="nodata">
             <p>暂无公告</p>   
-          </el-col> -->
+          </el-col>
         </el-row>
       </el-col>
       <!-- <el-col v-else :lg="24">
@@ -56,10 +32,11 @@
 </template>
 
 <script>
+import {requestAjax} from "network/request_ajax";
 export default {
   data(){
     return {
-      
+      loading: false,
     }
   },
   props:{
@@ -70,12 +47,42 @@ export default {
       type: Boolean,
       default: false,
     },
+    msgData:{
+      type: Array,
+      required: true,
+      default: [],
+    }
+  },
+  created(){
+    // this.getMessage();
   },
   methods:{
-    toLink(){
-      this.$router.push("/teacher/message/xxxxx");
-    }
-  }
+    toLink(id,type){
+      this.$router.push({
+        path: "/teacher/message/"+id,
+        query:{
+          type: type,
+        }
+      });
+    },
+  },
+  computed:{
+    sum(){
+      return this.tableData.length;
+    },
+    getDate(){
+      return (s)=>{
+        let date = new Date();
+        date.setTime(s);
+        let y = date.getFullYear();
+        let m = date.getMonth() + 1;
+        m = String(m).length == 1 ? '0'+m : m;
+        let d = date.getDate();
+        d = String(d).length == 1 ? '0'+d : d;
+        return y+"-"+m+"-"+d;
+      }
+    },
+  },
 }
 </script>
 
@@ -89,7 +96,7 @@ export default {
     margin-bottom: 8px;
     position: relative;
   }
-  .acmItem::before{
+  .noread::before{
     content:"";
     display: block;
     width: 10px;
@@ -98,6 +105,16 @@ export default {
     left: 15px;
     top: 5px;
     background-color: #2ecc71;
+  }
+  .read::before{
+    content:"";
+    display: block;
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    left: 15px;
+    top: 5px;
+    background-color: #cccccc;
   }
   .acmItem>div>div>p{
     text-align: left;
@@ -121,7 +138,7 @@ export default {
     text-align: right;
     font-size: 12px;
     transform: scale(0.9);
-    top: 8px;
+    top: 3px;
     color: #aaa;
   }
   .announcement .more{
