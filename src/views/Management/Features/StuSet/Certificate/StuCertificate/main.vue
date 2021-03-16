@@ -120,64 +120,11 @@ export default {
         }
       })
     },
-    getSkill(v){
-      requestAjax({
-        url: "/base/profession.php",
-        type: 'get',
-        data:{
-          type: "sel_profession",
-          sel: v == "all" ? 'skill_campus' : 'skill_department',
-          val: v == 'all' ? this.$store.state.userCampus : v,
-        },
-        async: true,
-        success:(res)=>{
-          res = JSON.parse(res);
-          this.skillData = res;
-        },
-        error:(err)=>{
-          console.log(err);
-          this.$notify.error({
-            title: '错误',
-            message: '服务器有误！,请稍后再试！'
-          });
-        }
-      })
-    },
-    getGrade(){ 
-      requestAjax({
-        url: "/base/grade.php",
-        type: 'get',
-        data:{
-          type: "sel_grade",
-          selobj:{
-            campus: this.$store.state.userCampus,
-          }
-        },
-        async: true,
-        success:(res)=>{
-          res = JSON.parse(res);
-          this.gradeData = res;
-        },
-        error:(err)=>{
-          console.log(err);
-          this.$notify.error({
-            title: '错误',
-            message: '服务器有误！,请稍后再试！'
-          });
-        }
-      })
-    },
-    getClass(dep,skill,grade){
-      let selobj = {};
-      if(skill != 'all'){
-        selobj = grade == 'all' ? {class_skill: skill} : {class_skill: skill,class_grade: grade};
-      }else{
-        if(dep != 'all'){
-          selobj = grade == 'all' ? {class_department: dep} : {class_department: dep,class_grade: grade};
-        }else{
-          selobj = grade == 'all' ? {class_campus: this.$store.state.userCampus} : {class_campus: this.$store.state.userCampus,class_grade: grade}
-        }
-      }
+    getClass(dep){
+      let selobj = {
+        campus: this.$store.state.userCampus,
+        department: dep,
+      };
       requestAjax({
         type: "get",
         url: "/base/class.php",

@@ -38,6 +38,7 @@ export default new Vuex.Store({
     logout(state){      
       state.isLogin = false;
       localStorage.clear();
+      location.reload();
     },
     handleUsername(state,name){
       localStorage.setItem("username",name);
@@ -74,6 +75,7 @@ export default new Vuex.Store({
               state.userAuthority = JSON.parse(res['info']['authority'] ? res['info']['authority'] : null);
               state.userClass = res['info']['class'];
               state.userGrade = res['info']['grade'];
+              state.userHead = res['info']['user_head'] ? res['info']['user_head'] : "";
               // console.log(res['info']);
               let $old = state.semester_start;
               let $new = new Date().getTime();

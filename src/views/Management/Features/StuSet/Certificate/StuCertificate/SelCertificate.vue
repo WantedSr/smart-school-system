@@ -1,28 +1,15 @@
 <template>
   <div class="selstuinfo">
     <div class="pagehead">
-      <h1>学生信息列表</h1>
+      <h1>学生证书列表</h1>
     </div>
 
       <el-row>
         <el-col :lg="24" :md="24" :sm="24" :xs="24">
           <el-form :inline="true" :model="sel" class="demo-form-inline">
             <el-form-item label="">
-              <el-select @change="selSkill" size="small" v-model="sel.department" placeholder="选择部门">
-                <el-option v-if="depData.length > 0" label="所有部门" value="all"></el-option>
+              <el-select @change="selClass" size="small" v-model="sel.department" placeholder="选择部门">
                 <el-option v-for="(item,i) in depData" :key="'1-'+i" :label="item.department_name" :value="item.department_id"></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="">
-              <el-select @change="selClass" size="small" v-model="sel.skill" placeholder="选择专业">
-                <el-option v-if="skillData.length > 0" label="所有专业" value="all"></el-option>
-                <el-option v-for="(item,i) in skillData" :key="'2-'+i" :label="item.skill_name" :value="item.skill_id"></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="">
-              <el-select @change="selClass" size="small" v-model="sel.grade" placeholder="选择年级">
-                <el-option v-if="gradeData.length > 0" label="所有年级" value="all"></el-option>
-                <el-option v-for="(item,i) in gradeData" :key="'3-'+i" :label="item.grade_name" :value="item.grade_id"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="">
@@ -217,10 +204,6 @@ export default {
     onSubmit(){
 
     },
-    selSkill(v){
-      this.sel.profession = '',
-      this.$emit('selSkill',v);
-    },
     selClass(v){
       this.sel.class = '';
       if(this.sel.skill == "" || this.sel.grade == '') return;
@@ -255,7 +238,7 @@ export default {
         },
         error:(err)=>{
           this.loading = false;
-          console.log(err);
+          console.error(err);
           this.$notify.error({
             title: '错误',
             message: '服务器有误！,请稍后再试！'

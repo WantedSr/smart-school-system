@@ -9,7 +9,7 @@
                 <a href="/student/growing" target="_blank"><p>我的成长档案&nbsp;&gt;</p></a>
               </div>
               <div class="userHead">
-                <el-avatar :size="120" icon="el-icon-user"></el-avatar>
+                <el-avatar :src="src" :size="120" icon="el-icon-user"></el-avatar>
               </div>
               <h1>{{userInfo.username}}</h1>
               <p>{{userInfo.class}}</p>
@@ -113,6 +113,7 @@ export default {
   data(){
     return {
       userInfo: "",
+      src: this.$store.state.endUrl + "/userhead/" + this.$store.state.userHead,
     }
   },
   computed:{
@@ -175,6 +176,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid #f0f0f0;
   }
   .userHead i{
     font-size: 40px;

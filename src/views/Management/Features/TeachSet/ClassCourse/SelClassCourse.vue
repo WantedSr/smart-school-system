@@ -1,8 +1,6 @@
 <template>
   <div class="subpage" v-loading="loading">
-    <div class="pagehead">
-      <h1>选择学期与班级</h1>
-    </div>
+    <head-title :title="'选择学期与班级'"></head-title>
     <el-form :inline="true" :model="sel" class="demo-form-inline">
       <el-form-item label="">
         <el-select @change="getClass" size="small" v-model="sel.semester" placeholder="查询学期">
@@ -23,6 +21,7 @@
 
 <script>
 import {requestAjax} from "network/request_ajax";
+import headTitle from "components/head/headTitle.vue"
 export default {
   data(){
     return{
@@ -35,6 +34,9 @@ export default {
       semesterData: [],
       classData: [],
     }
+  },
+  component:{
+    headTitle,
   },
   created(){
     this.getSemester();

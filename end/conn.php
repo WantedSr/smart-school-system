@@ -7,10 +7,10 @@
     private $test_password = "root";
     private $test_db = "db_aqschool";
 
-    // private $pdt_host = "bj-cdb-f9waakdl.sql.tencentcdb.com";
-    // private $pdt_port = '63790';
+    // private $pdt_host = "xxxxx";
+    // private $pdt_port = '88888';
     // private $pdt_user = "root";
-    // private $pdt_password = "root123456";
+    // private $pdt_password = "123456";
     // private $pdt_db = "schoolSystem";
 
     private $tb;
@@ -20,9 +20,9 @@
     {
       $this->tb = $tb;
       try{
-        // 测试
+        // pro
         $this->pdo = new PDO("mysql:host=".$this->test_host.";dbname=".$this->test_db,$this->test_user,$this->test_password);
-        // 生产
+        // dev
         // $this->pdo = new PDO("mysql:host=".$this->pdt_host.";port=".$this->pdt_port.";dbname=".$this->pdt_db,$this->pdt_user,$this->pdt_password);
         $this->pdo->query("SET NAMES UTF8");
       } catch (Exception $th) {

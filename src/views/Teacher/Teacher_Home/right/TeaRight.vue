@@ -76,8 +76,7 @@ import {requestAjax} from "network/request_ajax";
 export default {
   data(){
     return {
-      src: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg',
-      // src: "",
+      src: this.$store.state.endUrl + "/userhead/" + this.$store.state.userHead,
       userInfo: "",
       loading: false,
     }
@@ -141,6 +140,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid #f0f0f0;
   }
   .userHead i{
     font-size: 40px;

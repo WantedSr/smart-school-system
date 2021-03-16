@@ -48,6 +48,7 @@ header('Access-Control-Allow-Origin: *');
         $semester = $conn->query("SELECT * FROM base_semester WHERE state = '1' AND campus = '$campus';")->fetchAll(PDO::FETCH_ASSOC)[0];
         $campus_name = $conn->query("SELECT campus_name FROM base_campus WHERE campus_school = '$school' AND campus_id = '$campus';")->fetchAll(PDO::FETCH_ASSOC)[0]['campus_name'];
         $authority = $conn->query("SELECT * FROM system_authority WHERE authority_id = '".$res['user_group']."';")->fetchAll(PDO::FETCH_ASSOC)[0]['authority_range'];
+        $userhead = $conn->query("SELECT * FROM tb_userhead WHERE user = '$userId' AND campus = '$campus';")->fetchAll(PDO::FETCH_ASSOC)[0]['user_head'];
         $class = "";
         $grade = "";
         if($res['user_group'] == 'S1'){
@@ -63,6 +64,7 @@ header('Access-Control-Allow-Origin: *');
         $res['campus_name'] = $campus_name;
         $res['class'] = $class;
         $res['grade'] = $grade;
+        $res['user_head'] = $userhead;
         $msg['info'] = $res;
         echo json_encode($msg);
       }

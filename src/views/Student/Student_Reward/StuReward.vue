@@ -3,36 +3,39 @@
     <el-page-header @back="goBack" content="奖惩情况"></el-page-header>
 
     <div class="moreScore">
-      本学期总分：<el-tag v-if="value != ''">{{score}}</el-tag>
+      本学期总分：<el-tag size="small" v-if="semester != ''">{{score}}</el-tag>
     </div>
     <div class="selSemester">
       <span>请选择学期</span>
-      <el-select v-model="value" placeholder="请选择学期">
-        <el-option label="2019-2020上学期" value="192001"></el-option>
-        <el-option label="2018-2019下学期" value="181902"></el-option>
-        <el-option label="2018-2019上学期" value="181901"></el-option>
-      </el-select>  
+      <el-select @change="onSubmit" size="small" v-model="semester" placeholder="查询学期">
+        <el-option v-for="(item,i) in semesterData" :key="'s-'+i" :label="item.semester" :value="item.semesterId"></el-option>
+      </el-select>
     </div>
 
     <el-table
-      v-if="value != ''"
-      ref="filterTable"
-      :data="tableData"
+      v-if="semester != ''"
+      :data="showTable"
+      size="small"
+      v-loading="loading"
+      border
+      stripe
+      ref="multipleTable"
+      tooltip-effect="dark"
+      @selection-change="handleSelectionChange"
+      element-loading-text="拼命加载中"
+      element-loading-spinner="el-icon-loading"
+      element-loading-background="rgba(0, 0, 0, 0.8)"
       style="width: 100%">
       <el-table-column
         prop="date"
         label="日期"
         sortable
         width="180"
-        column-key="date"
-        :filters="[{text: '2016-05-01', value: '2016-05-01'}, {text: '2016-05-02', value: '2016-05-02'}, {text: '2016-05-03', value: '2016-05-03'}, {text: '2016-05-04', value: '2016-05-04'}]"
-        :filter-method="filterHandler"
       >
       </el-table-column>
       <el-table-column
         prop="type"
         label="性质"        
-        :filters="[{ text: '加分', value: '加分' }, { text: '减分', value: '减分' }]" 
         :filter-method="filterTag" 
         filter-placement="bottom-end"
         width="180">
@@ -57,65 +60,93 @@
 </template>
 
 <script>
+import {requestAjax} from "network/request_ajax"; 
 export default {
   data(){
     return{
       score: 100,
-      value: "",
-      tableData: [{
-        date: '2016-05-02',
-        type: '加分',
-        address: '好人好事',
-        tag: '+1'
-      }, {
-        date: '2016-05-04',
-        type: '减分',
-        address: '上课迟到',
-        tag: '-5'
-      }, {
-        date: '2016-05-01',
-        type: '加分',
-        address: '本月全勤',
-        tag: '+2'
-      }, {
-        date: '2016-05-03',
-        type: '加分',
-        address: '全国竞赛1等奖',
-        tag: '+15'
-      }, {
-        date: '2016-05-04',
-        type: '减分',
-        address: '破坏学校公共财产',
-        tag: '-20'
-      }, {
-        date: '2016-05-01',
-        type: '加分',
-        address: '全国计算机等级一级证书',
-        tag: '+10'
-      }, {
-        date: '2016-05-03',
-        type: '加分',
-        address: '打架斗殴',
-        tag: '-20'
-      }]
+      tableData:[],
+      showTable: [],
+
+      semesterData: [],
+      semester: "",
+
+      loading: false,
+      
+      page: 1,
+      total: 50,
     }
   },
+  created(){
+    this.getSemester();
+  },
   methods:{
-    resetDateFilter() {
-      this.$refs.filterTable.clearFilter('date');
+    setPage(page){
+      this.page = page;
+      let start = ((this.page-1)*this.total);
+      let end;
+      if(start + this.total >= this.tableData.length){
+        end = this.tableData.length;
+      }else{
+        end = start + this.total;
+      }
+      this.showTable = [];
+      for(let i = start;i < end ; i++){
+        this.showTable.push(this.tableData[i]);
+      }
     },
-    clearFilter() {
-      this.$refs.filterTable.clearFilter();
+    getSemester(){
+      this.loading = true;
+      requestAjax({
+        url: "/base/semester.php",
+        type: 'get',
+        data:{
+          type: "sel_semester",
+        },
+        async: true,
+        success:(res)=>{
+          this.loading = false;
+          res = JSON.parse(res);
+          this.semesterData = res;
+        },
+        error:(err)=>{
+          this.loading = false;
+          console.log(err);
+          this.$notify.error({
+            title: '错误',
+            message: '服务器有误！,请稍后再试！'
+          });
+        }
+      })
     },
-    formatter(row, column) {
-      return row.address;
-    },
-    filterTag(value, row) {
-      return row.tag == value;
-    },
-    filterHandler(value, row, column) {
-      const property = column['property'];
-      return row[property] === value;
+    onSubmit(){
+      this.loading = true;
+      requestAjax({
+        type: "post",
+        url: "/StuSet/SutScore.php",
+        data:{
+          action: "getSumScore",
+          student: this.$store.state.userId,
+          field: JSON.stringify({
+            semester: this.$store.state.semester,
+          }),
+        },
+        async: true,
+        success:res=>{
+          this.loading = false;
+          res = JSON.parse(res);
+          console.log(res);
+        },
+        error:err=>{
+          this.loading = false;
+          console.log(err);
+          this.$notify.error({
+            title: '错误',
+            message: '服务器有误！,请稍后再试！'
+          });
+        }
+      })
+      
     },
     goBack() {
       this.$router.go(-1);
