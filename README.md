@@ -1,13 +1,16 @@
 <!--
  * @Author: your name
  * @Date: 2020-09-05 20:33:10
- * @LastEditTime: 2021-03-16 13:26:31
+ * @LastEditTime: 2021-03-16 14:29:45
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \shandong\README.md
 -->
-# smart-school-system
 
+![s3.png](https://i.loli.net/2021/03/16/MA2lOFqSex9RuKY.png)  
+# <center><font color=#2c3e50>"smart-school-system"</font></center>
+#### <center><font color=#34495e>智慧校园管理系统</font></center>
+-------------------------
 这个是本人在去年（高三）的时候，帮个人写的系统，虽然最后没成（应该是我写的太烂了）  
 放着吃灰也是浪费，不如开源可能有的大佬们可以改改用到呢？  
   
@@ -59,4 +62,8 @@ npm run build
 ```
 
 
-如果大佬们喜欢，也希望能够给个**star**多多照顾一下谢谢
+如果大佬们喜欢，也希望能够给个 **<font color=red>star</font>** 多多照顾一下谢谢  
+
+--------------------------------
+
+#### <center><font color=#34495e>smart-school-system</font></center>
